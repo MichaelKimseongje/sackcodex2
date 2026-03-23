@@ -6,8 +6,6 @@ import math
 import pybullet as p
 import pybullet_data
 
-from sack_sparse_stabilizer import SparseSackStabilizer
-
 """
 ts:로그 확인
 t_unix: UNIX epoch time (초)/속도/가속도 추정 시 사용 가능
@@ -163,75 +161,37 @@ class DualUR5EEGuiIK:
 
         self.scale = 0.15
         self.mass_each = 0.20  # sheet mass (tune)
-        
-        sack_obj_path = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object/sack8.obj"
 
+        sackpath = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object/sack9.obj"
         SACK_OBJ = resolve_existing_path([
-            os.path.join(os.path.dirname(__file__), "object", "sack8.obj"),
-            sack_obj_path,
+            os.path.join(os.path.dirname(__file__), "Sackcodex2", "object", "sack9.obj"),
+            sackpath,
         ])
-
-        p.setAdditionalSearchPath(os.path.dirname(SACK_OBJ))
 
         self.sack_obj_path = SACK_OBJ
         self.sack_scale = 0.05
-        self.sack_mass = 0.10
+        self.sack_mass = 0.35
         self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
+        self.sack_rgba = [0.9, 0.85, 0.7, 0.99]
+        self.sack_wall_thickness = 0.008
+        self.sack_collision_shrink_xy = 0.82
+        self.sack_collision_shrink_height = 0.86
+        self.sack_inner_margin = 0.012
 
-        self.sack_id = p.loadSoftBody(
-            fileName=self.sack_obj_path,
-            basePosition=self.sack_spawn_pos,
-            baseOrientation=self.sack_spawn_orn,
-            scale=self.sack_scale,
-            mass=self.sack_mass,
-            useNeoHookean=0,
-            useMassSpring=1,
-            useBendingSprings=1,
-            springElasticStiffness=40.0,
-            springDampingStiffness=0.18,
-            springDampingAllDirections=1,
-            frictionCoeff=0.95,
-            useSelfCollision=1,
-            useFaceContact=1,
-            repulsionStiffness=120.0,
-            collisionMargin=0.0015,
-        )
-        p.changeVisualShape(self.sack_id, -1, rgbaColor=[0.9, 0.85, 0.7, 0.0])
-        p.changeVisualShape(self.sack_id, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
+        self.sack_local_vertices = self._load_obj_vertices(self.sack_obj_path)
+        self.sack_local_bbox_min = self.sack_local_vertices.min(axis=0)
+        self.sack_local_bbox_max = self.sack_local_vertices.max(axis=0)
+        self.sack_local_bbox_center = 0.5 * (self.sack_local_bbox_min + self.sack_local_bbox_max)
+        self.sack_local_size = (self.sack_local_bbox_max - self.sack_local_bbox_min) * self.sack_scale
 
-        self.initial_pos = self._capture_softbody_vertices(self.sack_id)
-        self.initial_center = self.initial_pos.mean(axis=0)
-        self.initial_offsets = self.initial_pos - self.initial_center
-        self.initial_local_offsets = self.initial_offsets.copy()
-        self.initial_radius = np.linalg.norm(self.initial_offsets, axis=1)
-        self.initial_bbox_min = self.initial_pos.min(axis=0)
-        self.initial_bbox_max = self.initial_pos.max(axis=0)
-        self.initial_size = self.initial_bbox_max - self.initial_bbox_min
-        spawn_rot = np.array(p.getMatrixFromQuaternion(self.sack_spawn_orn), dtype=np.float32).reshape(3, 3)
-        self.sack_proxy_local_center = (spawn_rot.T @ (self.initial_center - np.array(self.sack_spawn_pos, dtype=np.float32))).tolist()
-
+        self.sack_id = self._create_rigid_sack(self.sack_spawn_pos, self.sack_spawn_orn)
+        self.sack_content_ids = self._spawn_sack_internal_spheres()
         self.shape_restore_enabled = False
-        self.shape_restore_k = 0.0
-        self.shape_restore_damping = 0.0
-        self.shape_restore_radial_k = 0.0
-
-        self.sack_soft_id = self.sack_id
-        self.sack_rigid_id = None
-        self.sack_mode = "soft"
-        self.sack_gripper_links = self._collect_sack_gripper_links()
-        self.sack_soft_swap_distance = 0.0
-        self.sack_proxy_collision_scale = 0.78
-        self.sack_proxy_visual_scale = 0.72
-        self.sack_release_duration_sec = 0.35
-        self._sack_release_start_time = None
-        self.sack_stabilizer = None
-        self.sack_filler_ids = []
-        self.sack_filler_spawned = False
-        self.sack_filler_delay_steps = 0
-        self._sack_filler_step_counter = 0
-
-        self._switch_sack_to_rigid(self.sack_spawn_pos, self.sack_spawn_orn)
+        self.initial_pos = None
+        self.initial_center = None
+        self.initial_offsets = None
+        self.initial_radius = None
 
         self.sack_debug_line_ids = {"x": None, "y": None, "z": None}
         self.sack_debug_text_id = None
@@ -239,6 +199,8 @@ class DualUR5EEGuiIK:
         self.sack_debug_update_sec = 0.5
         self._sack_last_debug_t = 0.0
 
+        self.enable_robot_debug = False
+        self.enable_sack_debug = False
         self.robot_debug_update_sec = 0.2
         self._robot_last_debug_t = 0.0
         self.robot_joint_marker_ids = {"L": [None]*len(self.jL), "R": [None]*len(self.jR)}
@@ -743,6 +705,124 @@ class DualUR5EEGuiIK:
         return taus, ratios, sat
     
     
+    def _load_obj_vertices(self, obj_path):
+        verts = []
+        with open(obj_path, "r", encoding="utf-8", errors="ignore") as fh:
+            for line in fh:
+                if line.startswith("v "):
+                    parts = line.split()
+                    if len(parts) >= 4:
+                        verts.append([float(parts[1]), float(parts[2]), float(parts[3])])
+        if not verts:
+            raise ValueError(f"No vertices found in OBJ: {obj_path}")
+        return np.array(verts, dtype=np.float32)
+
+    def _transform_points(self, base_pos, base_orn, local_points):
+        rot = np.array(p.getMatrixFromQuaternion(base_orn), dtype=np.float32).reshape(3, 3)
+        pts = np.array(local_points, dtype=np.float32)
+        return (pts @ rot.T) + np.array(base_pos, dtype=np.float32)
+
+    def _create_rigid_sack(self, base_pos, base_orn):
+        local_min = (self.sack_local_bbox_min - self.sack_local_bbox_center) * self.sack_scale
+        local_max = (self.sack_local_bbox_max - self.sack_local_bbox_center) * self.sack_scale
+        x_min, y_min, z_min = local_min.tolist()
+        x_max, y_max, z_max = local_max.tolist()
+        cx = cz = 0.0
+        cy = 0.5 * (y_min + y_max)
+        wall_t = float(self.sack_wall_thickness)
+        side_h = 0.5 * (y_max - y_min) * float(self.sack_collision_shrink_height)
+        span_x = 0.5 * (x_max - x_min) * float(self.sack_collision_shrink_xy)
+        span_z = 0.5 * (z_max - z_min) * float(self.sack_collision_shrink_xy)
+
+        half_extents = [
+            [max(span_x, wall_t), 0.5 * wall_t, max(span_z, wall_t)],
+            [0.5 * wall_t, max(side_h, wall_t), max(span_z, wall_t)],
+            [0.5 * wall_t, max(side_h, wall_t), max(span_z, wall_t)],
+            [max(span_x, wall_t), max(side_h, wall_t), 0.5 * wall_t],
+            [max(span_x, wall_t), max(side_h, wall_t), 0.5 * wall_t],
+        ]
+        positions = [
+            [cx, y_min + 0.5 * wall_t, cz],
+            [x_min + 0.5 * wall_t, cy, cz],
+            [x_max - 0.5 * wall_t, cy, cz],
+            [cx, cy, z_min + 0.5 * wall_t],
+            [cx, cy, z_max - 0.5 * wall_t],
+        ]
+        orientations = [[0, 0, 0, 1]] * len(half_extents)
+        col = p.createCollisionShapeArray(
+            shapeTypes=[p.GEOM_BOX] * len(half_extents),
+            halfExtents=half_extents,
+            collisionFramePositions=positions,
+            collisionFrameOrientations=orientations,
+        )
+        vis = p.createVisualShape(
+            p.GEOM_MESH,
+            fileName=self.sack_obj_path,
+            meshScale=[self.sack_scale] * 3,
+            rgbaColor=self.sack_rgba,
+            visualFramePosition=(-self.sack_local_bbox_center * self.sack_scale).tolist(),
+        )
+        sack_id = p.createMultiBody(
+            baseMass=self.sack_mass,
+            baseCollisionShapeIndex=col,
+            baseVisualShapeIndex=vis,
+            basePosition=base_pos,
+            baseOrientation=base_orn,
+        )
+        p.changeDynamics(
+            sack_id, -1,
+            lateralFriction=1.2,
+            spinningFriction=0.05,
+            rollingFriction=0.0,
+            restitution=0.0,
+            linearDamping=0.04,
+            angularDamping=0.12,
+        )
+        return sack_id
+
+    def _spawn_sack_internal_spheres(self):
+        base_pos, base_orn = p.getBasePositionAndOrientation(self.sack_id)
+        local_min = (self.sack_local_bbox_min - self.sack_local_bbox_center) * self.sack_scale
+        local_max = (self.sack_local_bbox_max - self.sack_local_bbox_center) * self.sack_scale
+        margin = float(self.sack_inner_margin)
+        x_min = float(local_min[0] + margin)
+        x_max = float(local_max[0] - margin)
+        y_min = float(local_min[1] + self.sack_wall_thickness + margin)
+        y_max = float(local_min[1] + 0.65 * (local_max[1] - local_min[1]))
+        z_min = float(local_min[2] + margin)
+        z_max = float(local_max[2] - margin)
+
+        radius = 0.009
+        xs = np.linspace(x_min, x_max, 3)
+        ys = np.linspace(y_min + radius, y_max - radius, 3)
+        zs = np.linspace(z_min, z_max, 2)
+
+        col = p.createCollisionShape(p.GEOM_SPHERE, radius=radius)
+        vis = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=[0.52, 0.44, 0.30, 1.0])
+        ids = []
+        for x in xs:
+            for y in ys:
+                for z in zs:
+                    wpos = self._transform_points(base_pos, base_orn, [[x, y, z]])[0]
+                    bid = p.createMultiBody(
+                        baseMass=0.018,
+                        baseCollisionShapeIndex=col,
+                        baseVisualShapeIndex=vis,
+                        basePosition=wpos.tolist(),
+                        baseOrientation=[0, 0, 0, 1],
+                    )
+                    p.changeDynamics(
+                        bid, -1,
+                        lateralFriction=1.1,
+                        spinningFriction=0.03,
+                        rollingFriction=0.002,
+                        restitution=0.0,
+                        linearDamping=0.10,
+                        angularDamping=0.10,
+                    )
+                    ids.append(bid)
+        return ids
+
     def border_indices_from_verts(self, verts, edge_band=0):
         """
         verts: p.getMeshData(...)[1]  ([(x,y,z), ...])
@@ -880,53 +960,6 @@ class DualUR5EEGuiIK:
         return sphere_ids
     
     
-    def spawn_sack_fillers(self):
-        if self.sack_filler_spawned or self.sack_id is None:
-            return []
-
-        sphere_r = 0.004
-        sphere_mass = 0.00035
-        col = p.createCollisionShape(p.GEOM_SPHERE, radius=sphere_r)
-        verts, _ = self.get_soft_verts(self.sack_id)
-        center = verts.mean(axis=0)
-
-        ids = []
-        for dx in (-0.010, 0.0, 0.010):
-            for dy in (-0.015, 0.0, 0.015):
-                for dz in (-0.015, 0.0):
-                    pos = [float(center[0] + dx), float(center[1] + dy), float(center[2] + dz)]
-                    bid = p.createMultiBody(
-                        baseMass=sphere_mass,
-                        baseCollisionShapeIndex=col,
-                        baseVisualShapeIndex=-1,
-                        basePosition=pos,
-                    )
-                    p.changeDynamics(
-                        bid,
-                        -1,
-                        lateralFriction=0.4,
-                        spinningFriction=0.0,
-                        rollingFriction=0.0,
-                        restitution=0.0,
-                        linearDamping=0.98,
-                        angularDamping=0.98,
-                        contactProcessingThreshold=0.0,
-                    )
-                    ids.append(bid)
-
-        self.sack_filler_ids = ids
-        self.sack_filler_spawned = True
-        print(f"[SACK_FILLER] spawned {len(ids)} spheres")
-        return ids
-
-    def maybe_spawn_sack_fillers(self):
-        if self.sack_filler_spawned:
-            return
-        self._sack_filler_step_counter += 1
-        if self._sack_filler_step_counter < self.sack_filler_delay_steps:
-            return
-        self.spawn_sack_fillers()
-
     def min_border_distance_xy(self,cloth_bottom, cloth_top, edge_band=1):
         vb, vb_raw = self.get_soft_verts(cloth_bottom)
         vt, vt_raw = self.get_soft_verts(cloth_top)
@@ -945,341 +978,38 @@ class DualUR5EEGuiIK:
                 min_d = dd
         return float(np.sqrt(min_d))
     
-    def get_soft_verts(self,soft_id):
-        md = p.getMeshData(soft_id, -1, flags=p.MESH_DATA_SIMULATION_MESH)
-        return np.array(md[1], dtype=np.float32), md[1]
+    def get_soft_verts(self, soft_id):
+        return np.zeros((0, 3), dtype=np.float32), []
 
     def _capture_softbody_vertices(self, soft_id):
-        verts, _ = self.get_soft_verts(soft_id)
-        return np.array(verts, dtype=np.float32)
-
-    def _collect_sack_gripper_links(self):
-        links = set()
-        for rid, plate in ((self.urL, self.plateL), (self.urR, self.plateR)):
-            if plate is None:
-                continue
-            links.add((rid, plate))
-            for link_idx in self._collect_descendant_links(rid, plate):
-                links.add((rid, link_idx))
-        return links
-
-    def _rotation_matrix_to_quaternion(self, rot):
-        m = np.array(rot, dtype=np.float64)
-        trace = float(np.trace(m))
-        if trace > 0.0:
-            s = math.sqrt(trace + 1.0) * 2.0
-            qw = 0.25 * s
-            qx = (m[2, 1] - m[1, 2]) / s
-            qy = (m[0, 2] - m[2, 0]) / s
-            qz = (m[1, 0] - m[0, 1]) / s
-        elif m[0, 0] > m[1, 1] and m[0, 0] > m[2, 2]:
-            s = math.sqrt(1.0 + m[0, 0] - m[1, 1] - m[2, 2]) * 2.0
-            qw = (m[2, 1] - m[1, 2]) / s
-            qx = 0.25 * s
-            qy = (m[0, 1] + m[1, 0]) / s
-            qz = (m[0, 2] + m[2, 0]) / s
-        elif m[1, 1] > m[2, 2]:
-            s = math.sqrt(1.0 + m[1, 1] - m[0, 0] - m[2, 2]) * 2.0
-            qw = (m[0, 2] - m[2, 0]) / s
-            qx = (m[0, 1] + m[1, 0]) / s
-            qy = 0.25 * s
-            qz = (m[1, 2] + m[2, 1]) / s
-        else:
-            s = math.sqrt(1.0 + m[2, 2] - m[0, 0] - m[1, 1]) * 2.0
-            qw = (m[1, 0] - m[0, 1]) / s
-            qx = (m[0, 2] + m[2, 0]) / s
-            qy = (m[1, 2] + m[2, 1]) / s
-            qz = 0.25 * s
-        q = np.array([qx, qy, qz, qw], dtype=np.float64)
-        n = np.linalg.norm(q)
-        if n < 1e-9:
-            return [0.0, 0.0, 0.0, 1.0]
-        q /= n
-        return q.tolist()
-
-    def _create_rigid_sack(self, base_pos, base_orn):
-        base_half = 0.5 * np.maximum(self.initial_size, 1e-4)
-        col_half = (float(getattr(self, "sack_proxy_collision_scale", 0.78)) * base_half).tolist()
-        vis_half = (float(getattr(self, "sack_proxy_visual_scale", 0.72)) * base_half).tolist()
-        frame_pos = [float(x) for x in getattr(self, "sack_proxy_local_center", [0.0, 0.0, 0.0])]
-        col = p.createCollisionShape(
-            p.GEOM_BOX,
-            halfExtents=col_half,
-            collisionFramePosition=frame_pos,
-        )
-        vis = p.createVisualShape(
-            p.GEOM_BOX,
-            halfExtents=vis_half,
-            visualFramePosition=frame_pos,
-            rgbaColor=[0.82, 0.74, 0.56, 0.18],
-        )
-        rid = p.createMultiBody(
-            baseMass=self.sack_mass,
-            baseCollisionShapeIndex=col,
-            baseVisualShapeIndex=vis,
-            basePosition=[float(x) for x in base_pos],
-            baseOrientation=[float(x) for x in base_orn],
-        )
-        p.changeDynamics(
-            rid,
-            -1,
-            lateralFriction=2.5,
-            spinningFriction=0.08,
-            rollingFriction=0.0,
-            restitution=0.0,
-            linearDamping=0.35,
-            angularDamping=0.35,
-            ccdSweptSphereRadius=0.004,
-            contactProcessingThreshold=0.0,
-        )
-        return rid
-
-    def _create_soft_sack(self, base_pos, base_orn):
-        soft_id = p.loadSoftBody(
-            fileName=self.sack_obj_path,
-            basePosition=[float(x) for x in base_pos],
-            baseOrientation=[float(x) for x in base_orn],
-            scale=self.sack_scale,
-            mass=self.sack_mass,
-            useNeoHookean=0,
-            useMassSpring=1,
-            useBendingSprings=1,
-            springElasticStiffness=40.0,
-            springDampingStiffness=0.18,
-            springDampingAllDirections=1,
-            frictionCoeff=0.95,
-            useSelfCollision=1,
-            useFaceContact=1,
-            repulsionStiffness=120.0,
-            collisionMargin=0.0015,
-        )
-        p.changeVisualShape(soft_id, -1, rgbaColor=[0.9, 0.85, 0.7, 0.99])
-        p.changeVisualShape(soft_id, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
-        return soft_id
-
-    def _estimate_soft_pose(self, soft_id):
-        mesh_data = p.getMeshData(soft_id, -1, flags=p.MESH_DATA_SIMULATION_MESH)
-        current_pos = np.array(mesh_data[1], dtype=np.float32)
-        center = current_pos.mean(axis=0)
-        offsets = current_pos - center
-        rot = self._best_fit_rotation(self.initial_local_offsets, offsets)
-        quat = self._rotation_matrix_to_quaternion(rot)
-        lin_vel = [0.0, 0.0, 0.0]
-        if len(mesh_data) >= 3:
-            try:
-                vel = np.array(mesh_data[2], dtype=np.float32)
-                if vel.shape == current_pos.shape and vel.size > 0:
-                    lin_vel = vel.mean(axis=0).tolist()
-            except Exception:
-                pass
-        return center.tolist(), quat, lin_vel
-
-    def _switch_sack_to_rigid(self, base_pos=None, base_orn=None, lin_vel=None):
-        if self.sack_mode == "rigid":
-            return
-        if base_pos is None:
-            base_pos = self.sack_spawn_pos
-        if base_orn is None:
-            base_orn = self.sack_spawn_orn
-        if self.sack_soft_id is not None:
-            try:
-                p.removeBody(self.sack_soft_id)
-            except Exception:
-                pass
-            self.sack_soft_id = None
-        self.sack_rigid_id = self._create_rigid_sack(base_pos, base_orn)
-        if lin_vel is not None:
-            try:
-                p.resetBaseVelocity(self.sack_rigid_id, linearVelocity=[float(x) for x in lin_vel])
-            except Exception:
-                pass
-        self.sack_id = self.sack_rigid_id
-        self.sack_mode = "rigid"
-        self._sack_release_start_time = None
-
-    def _switch_sack_to_soft(self):
-        if self.sack_mode == "soft":
-            return
-        pos, orn = p.getBasePositionAndOrientation(self.sack_rigid_id)
-        lin_vel, ang_vel = p.getBaseVelocity(self.sack_rigid_id)
-        try:
-            p.removeBody(self.sack_rigid_id)
-        except Exception:
-            pass
-        self.sack_rigid_id = None
-        self.sack_soft_id = self._create_soft_sack(pos, orn)
-        self.sack_id = self.sack_soft_id
-        self.sack_mode = "soft"
-        self._sack_release_start_time = None
-        del ang_vel
-        del lin_vel
-
-    def _sack_has_gripper_contact(self):
-        if self.sack_id is None:
-            return False
-        for rid, link_idx in self.sack_gripper_links:
-            try:
-                pts = p.getContactPoints(bodyA=self.sack_id, bodyB=rid)
-            except Exception:
-                continue
-            for cp in pts:
-                if cp[4] == link_idx or cp[3] == link_idx:
-                    return True
-        return False
-
-    def _sack_has_gripper_near_contact(self, distance=None):
-        if self.sack_id is None:
-            return False
-        distance = float(self.sack_soft_swap_distance if distance is None else distance)
-        for rid, link_idx in self.sack_gripper_links:
-            try:
-                pts = p.getClosestPoints(bodyA=self.sack_id, bodyB=rid, distance=distance)
-            except Exception:
-                continue
-            for cp in pts:
-                if (cp[4] == link_idx or cp[3] == link_idx) and float(cp[8]) <= distance:
-                    return True
-        return False
-
-    def get_shape_restore_gain_scale(self):
-        if self.sack_mode != "soft":
-            return 0.0
-        if self._sack_release_start_time is None:
-            return 1.0
-        t = max(0.0, time.time() - float(self._sack_release_start_time))
-        return float(min(t / max(self.sack_release_duration_sec, 1e-6), 1.0))
-
-    def update_sack_mode(self):
-        has_contact = self._sack_has_gripper_contact()
-        if self.sack_mode == "rigid":
-            if has_contact or self._sack_has_gripper_near_contact():
-                self._switch_sack_to_soft()
-            return
-
-        if has_contact:
-            self._sack_release_start_time = None
-            return
-
-        if self._sack_release_start_time is None:
-            self._sack_release_start_time = time.time()
-            return
-
-        if (time.time() - float(self._sack_release_start_time)) < float(self.sack_release_duration_sec):
-            return
-
-        pos, orn, lin_vel = self._estimate_soft_pose(self.sack_soft_id)
-        self._switch_sack_to_rigid(pos, orn, lin_vel=lin_vel)
+        return None
 
     def _best_fit_rotation(self, rest_offsets, current_offsets):
-        cov = rest_offsets.T @ current_offsets
-        try:
-            u, _, vt = np.linalg.svd(cov)
-        except np.linalg.LinAlgError:
-            return np.eye(3, dtype=np.float32)
+        return np.eye(3, dtype=np.float32)
 
-        rot = vt.T @ u.T
-        if np.linalg.det(rot) < 0:
-            vt[-1, :] *= -1.0
-            rot = vt.T @ u.T
-        return rot.astype(np.float32)
+    def _rotation_matrix_to_quaternion(self, rot):
+        return np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+
+    def _iter_robot_contact_pairs(self):
+        return []
+
+    def _sack_has_robot_contact(self):
+        return False
+
+    def _sack_has_robot_near_contact(self, distance=None):
+        return False
 
     def apply_shape_restoration(self, soft_id, initial_pos, k=30.0, damping=1.0):
-        if soft_id is None or initial_pos is None:
-            return
-        if getattr(self, "sack_mode", "soft") != "soft":
-            return
-        gain_scale = float(getattr(self, "get_shape_restore_gain_scale", lambda: 1.0)())
-        if gain_scale <= 0.0:
-            return
-
-        mesh_data = p.getMeshData(soft_id, -1, flags=p.MESH_DATA_SIMULATION_MESH)
-        if len(mesh_data) < 2:
-            return
-
-        current_pos = np.array(mesh_data[1], dtype=np.float32)
-        rest_pos = np.array(initial_pos, dtype=np.float32)
-        if current_pos.shape != rest_pos.shape or current_pos.size == 0:
-            return
-
-        current_center = current_pos.mean(axis=0)
-        rest_center = getattr(self, "initial_center", rest_pos.mean(axis=0))
-        rest_offsets = np.array(getattr(self, "initial_offsets", rest_pos - rest_center), dtype=np.float32)
-        current_offsets = current_pos - current_center
-        rot = self._best_fit_rotation(rest_offsets, current_offsets)
-        target_pos = current_center + rest_offsets @ rot.T
-        current_radius = np.linalg.norm(current_offsets, axis=1)
-        rest_radius = getattr(self, "initial_radius", np.linalg.norm(rest_offsets, axis=1))
-
-        velocities = None
-        if len(mesh_data) >= 3:
-            try:
-                velocities = np.array(mesh_data[2], dtype=np.float32)
-                if velocities.shape != current_pos.shape:
-                    velocities = None
-            except Exception:
-                velocities = None
-
-        world_restore = (float(k) * gain_scale) * (target_pos - current_pos)
-        radial_dirs = np.array(rest_offsets, dtype=np.float32)
-        nonzero = current_radius > 1e-6
-        radial_dirs[nonzero] = current_offsets[nonzero] / current_radius[nonzero][:, None]
-        rest_norm = np.linalg.norm(radial_dirs, axis=1)
-        rest_nonzero = rest_norm > 1e-6
-        radial_dirs[rest_nonzero] = radial_dirs[rest_nonzero] / rest_norm[rest_nonzero][:, None]
-        rest_radius = np.array(rest_radius, dtype=np.float32)
-        radial_error = rest_radius - current_radius
-        radial_k = float(getattr(self, "shape_restore_radial_k", 90.0)) * gain_scale
-        radial_restore = radial_k * radial_error[:, None] * radial_dirs
-
-        forces = world_restore + radial_restore
-        if velocities is not None:
-            forces -= float(damping) * velocities
-
-        for idx, (pos, force) in enumerate(zip(current_pos, forces)):
-            p.applyExternalForce(
-                objectUniqueId=soft_id,
-                linkIndex=idx,
-                forceObj=force.tolist(),
-                posObj=pos.tolist(),
-                flags=p.WORLD_FRAME,
-            )
+        return
 
     def _get_sack_state(self):
-        if self.sack_id is None:
-            return None
-
-        if getattr(self, "sack_mode", "soft") == "soft":
-            verts, _ = self.get_soft_verts(self.sack_id)
-            if verts.size == 0:
-                return None
-            center = verts.mean(axis=0)
-            vmin = verts.min(axis=0)
-            vmax = verts.max(axis=0)
-            size = vmax - vmin
-            offsets = verts - center
-            rot = self._best_fit_rotation(self.initial_offsets, offsets)
-            orn = self._rotation_matrix_to_quaternion(rot)
-        else:
-            pos, orn = p.getBasePositionAndOrientation(self.sack_id)
-            center = np.array(pos, dtype=np.float32)
-            rot = np.array(p.getMatrixFromQuaternion(orn), dtype=np.float32).reshape(3, 3)
-            corners_local = np.array([
-                [sx, sy, sz]
-                for sx in (-0.5, 0.5)
-                for sy in (-0.5, 0.5)
-                for sz in (-0.5, 0.5)
-            ], dtype=np.float32) * self.initial_size[None, :]
-            corners_world = center[None, :] + corners_local @ rot.T
-            vmin = corners_world.min(axis=0)
-            vmax = corners_world.max(axis=0)
-            size = vmax - vmin
-
+        pos, orn = p.getBasePositionAndOrientation(self.sack_id)
         rpy = p.getEulerFromQuaternion(orn)
         return {
-            "center": center,
+            "center": np.array(pos, dtype=np.float32),
             "rpy": np.array(rpy, dtype=np.float32),
-            "quat": orn,
-            "size": size,
+            "quat": np.array(orn, dtype=np.float32),
+            "size": np.array(self.sack_local_size, dtype=np.float32),
         }
 
     def get_sack_approach_target(self, clearance=0.10, side_offset=0.0):
@@ -1294,6 +1024,8 @@ class DualUR5EEGuiIK:
         return target
 
     def _update_sack_debug(self, force=False):
+        if not getattr(self, "enable_sack_debug", True):
+            return
         now = time.time()
         if (not force) and (now - self._sack_last_debug_t < self.sack_debug_update_sec):
             return
@@ -1467,6 +1199,8 @@ class DualUR5EEGuiIK:
         return far1, far2, near, joint6_pos
 
     def _update_robot_realtime_debug(self, force=False):
+        if not getattr(self, "enable_robot_debug", False):
+            return
         now = time.time()
         if (not force) and (now - self._robot_last_debug_t < self.robot_debug_update_sec):
             return

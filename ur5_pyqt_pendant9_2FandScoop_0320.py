@@ -149,13 +149,8 @@ class SimThread(QtCore.QThread):
             self.sim._apply_q(self.sim.urR, self.sim.jR, list(qR), self.sim.maxF_R)
             if getattr(self.sim, "left_gripper_target", None) is not None:
                 self.sim.set_left_gripper_opening(self.sim.left_gripper_target)
-            if hasattr(self.sim, "update_sack_mode"):
-                self.sim.update_sack_mode()
-    
-            p.stepSimulation()
 
-            if hasattr(self.sim, "update_sack_mode"):
-                self.sim.update_sack_mode()
+            p.stepSimulation()
 
             if hasattr(self.sim, "_update_sack_debug"):
                 self.sim._update_sack_debug()
