@@ -170,23 +170,24 @@ class DualUR5EEGuiIK:
 
         self.sack_obj_path = SACK_OBJ
         self.sack_scale = 0.05
-        self.sack_mass = 0.35
+        self.sack_mass = 0.40
         self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
-        self.sack_rgba = [0.9, 0.85, 0.7, 0.99]
-        self.sack_wall_thickness = 0.008
-        self.sack_collision_shrink_xy = 0.82
-        self.sack_collision_shrink_height = 0.86
-        self.sack_inner_margin = 0.012
+        self.sack_rgba = [0.9, 0.85, 0.7, 0.7]
+        self.sack_collision_box_scale = [0.92, 0.94, 0.92]
+        self.sack_wall_thickness = 0.006
+        self.sack_inner_margin = 0.010
 
         self.sack_local_vertices = self._load_obj_vertices(self.sack_obj_path)
         self.sack_local_bbox_min = self.sack_local_vertices.min(axis=0)
         self.sack_local_bbox_max = self.sack_local_vertices.max(axis=0)
         self.sack_local_bbox_center = 0.5 * (self.sack_local_bbox_min + self.sack_local_bbox_max)
+        self.sack_local_mean = self.sack_local_vertices.mean(axis=0)
+        self.sack_visual_offset = np.zeros(3, dtype=np.float32)
         self.sack_local_size = (self.sack_local_bbox_max - self.sack_local_bbox_min) * self.sack_scale
 
         self.sack_id = self._create_rigid_sack(self.sack_spawn_pos, self.sack_spawn_orn)
-        self.sack_content_ids = self._spawn_sack_internal_spheres()
+        self.sack_content_ids, self.sack_content_constraint_ids = self._spawn_sack_internal_spheres()
         self.shape_restore_enabled = False
         self.initial_pos = None
         self.initial_center = None
@@ -723,44 +724,40 @@ class DualUR5EEGuiIK:
         return (pts @ rot.T) + np.array(base_pos, dtype=np.float32)
 
     def _create_rigid_sack(self, base_pos, base_orn):
-        local_min = (self.sack_local_bbox_min - self.sack_local_bbox_center) * self.sack_scale
-        local_max = (self.sack_local_bbox_max - self.sack_local_bbox_center) * self.sack_scale
-        x_min, y_min, z_min = local_min.tolist()
-        x_max, y_max, z_max = local_max.tolist()
-        cx = cz = 0.0
-        cy = 0.5 * (y_min + y_max)
+        outer = 0.5 * np.array(self.sack_local_size, dtype=np.float32)
+        outer = outer * np.array(self.sack_collision_box_scale, dtype=np.float32)
         wall_t = float(self.sack_wall_thickness)
-        side_h = 0.5 * (y_max - y_min) * float(self.sack_collision_shrink_height)
-        span_x = 0.5 * (x_max - x_min) * float(self.sack_collision_shrink_xy)
-        span_z = 0.5 * (z_max - z_min) * float(self.sack_collision_shrink_xy)
+        inner = np.maximum(outer - wall_t, 0.012)
+        center = np.array(self.sack_visual_offset, dtype=np.float32)
 
         half_extents = [
-            [max(span_x, wall_t), 0.5 * wall_t, max(span_z, wall_t)],
-            [0.5 * wall_t, max(side_h, wall_t), max(span_z, wall_t)],
-            [0.5 * wall_t, max(side_h, wall_t), max(span_z, wall_t)],
-            [max(span_x, wall_t), max(side_h, wall_t), 0.5 * wall_t],
-            [max(span_x, wall_t), max(side_h, wall_t), 0.5 * wall_t],
+            [outer[0], 0.5 * wall_t, outer[2]],
+            [outer[0], 0.5 * wall_t, outer[2]],
+            [0.5 * wall_t, inner[1], outer[2]],
+            [0.5 * wall_t, inner[1], outer[2]],
+            [inner[0], inner[1], 0.5 * wall_t],
+            [inner[0], inner[1], 0.5 * wall_t],
         ]
         positions = [
-            [cx, y_min + 0.5 * wall_t, cz],
-            [x_min + 0.5 * wall_t, cy, cz],
-            [x_max - 0.5 * wall_t, cy, cz],
-            [cx, cy, z_min + 0.5 * wall_t],
-            [cx, cy, z_max - 0.5 * wall_t],
+            [center[0], center[1] - inner[1] - 0.5 * wall_t, center[2]],
+            [center[0], center[1] + inner[1] + 0.5 * wall_t, center[2]],
+            [center[0] - inner[0] - 0.5 * wall_t, center[1], center[2]],
+            [center[0] + inner[0] + 0.5 * wall_t, center[1], center[2]],
+            [center[0], center[1], center[2] - inner[2] - 0.5 * wall_t],
+            [center[0], center[1], center[2] + inner[2] + 0.5 * wall_t],
         ]
-        orientations = [[0, 0, 0, 1]] * len(half_extents)
         col = p.createCollisionShapeArray(
             shapeTypes=[p.GEOM_BOX] * len(half_extents),
-            halfExtents=half_extents,
-            collisionFramePositions=positions,
-            collisionFrameOrientations=orientations,
+            halfExtents=[list(map(float, he)) for he in half_extents],
+            collisionFramePositions=[list(map(float, pp)) for pp in positions],
+            collisionFrameOrientations=[[0, 0, 0, 1]] * len(half_extents),
         )
         vis = p.createVisualShape(
             p.GEOM_MESH,
             fileName=self.sack_obj_path,
             meshScale=[self.sack_scale] * 3,
             rgbaColor=self.sack_rgba,
-            visualFramePosition=(-self.sack_local_bbox_center * self.sack_scale).tolist(),
+            visualFramePosition=(-self.sack_local_mean * self.sack_scale).tolist(),
         )
         sack_id = p.createMultiBody(
             baseMass=self.sack_mass,
@@ -771,41 +768,39 @@ class DualUR5EEGuiIK:
         )
         p.changeDynamics(
             sack_id, -1,
-            lateralFriction=1.2,
-            spinningFriction=0.05,
+            lateralFriction=1.4,
+            spinningFriction=0.06,
             rollingFriction=0.0,
             restitution=0.0,
-            linearDamping=0.04,
-            angularDamping=0.12,
+            linearDamping=0.06,
+            angularDamping=0.16,
         )
         return sack_id
 
     def _spawn_sack_internal_spheres(self):
         base_pos, base_orn = p.getBasePositionAndOrientation(self.sack_id)
-        local_min = (self.sack_local_bbox_min - self.sack_local_bbox_center) * self.sack_scale
-        local_max = (self.sack_local_bbox_max - self.sack_local_bbox_center) * self.sack_scale
-        margin = float(self.sack_inner_margin)
-        x_min = float(local_min[0] + margin)
-        x_max = float(local_max[0] - margin)
-        y_min = float(local_min[1] + self.sack_wall_thickness + margin)
-        y_max = float(local_min[1] + 0.65 * (local_max[1] - local_min[1]))
-        z_min = float(local_min[2] + margin)
-        z_max = float(local_max[2] - margin)
+        outer = 0.5 * np.array(self.sack_local_size, dtype=np.float32)
+        outer = outer * np.array(self.sack_collision_box_scale, dtype=np.float32)
+        inner = np.maximum(outer - float(self.sack_wall_thickness) - float(self.sack_inner_margin), 0.012)
+        center = np.array(self.sack_visual_offset, dtype=np.float32)
 
-        radius = 0.009
-        xs = np.linspace(x_min, x_max, 3)
-        ys = np.linspace(y_min + radius, y_max - radius, 3)
-        zs = np.linspace(z_min, z_max, 2)
+        radius = 0.0050
+        xs = center[0] + np.linspace(-0.20 * inner[0], 0.20 * inner[0], 3)
+        ys = center[1] + np.linspace(-0.16 * inner[1], 0.16 * inner[1], 2)
+        zs = center[2] + np.linspace(-0.16 * inner[2], 0.16 * inner[2], 2)
 
         col = p.createCollisionShape(p.GEOM_SPHERE, radius=radius)
         vis = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=[0.52, 0.44, 0.30, 1.0])
         ids = []
+        cids = []
+        sphere_mass = 0.30
         for x in xs:
             for y in ys:
                 for z in zs:
-                    wpos = self._transform_points(base_pos, base_orn, [[x, y, z]])[0]
+                    local_pos = [float(x), float(y), float(z)]
+                    wpos = self._transform_points(base_pos, base_orn, [local_pos])[0]
                     bid = p.createMultiBody(
-                        baseMass=0.018,
+                        baseMass=sphere_mass,
                         baseCollisionShapeIndex=col,
                         baseVisualShapeIndex=vis,
                         basePosition=wpos.tolist(),
@@ -814,14 +809,20 @@ class DualUR5EEGuiIK:
                     p.changeDynamics(
                         bid, -1,
                         lateralFriction=1.1,
-                        spinningFriction=0.03,
-                        rollingFriction=0.002,
+                        spinningFriction=0.02,
+                        rollingFriction=0.0005,
                         restitution=0.0,
-                        linearDamping=0.10,
-                        angularDamping=0.10,
+                        linearDamping=0.04,
+                        angularDamping=0.04,
+                        contactProcessingThreshold=0.0,
+                        ccdSweptSphereRadius=radius * 0.9,
                     )
+                    try:
+                        p.changeDynamics(bid, -1, ccdMotionThreshold=radius * 0.5)
+                    except Exception:
+                        pass
                     ids.append(bid)
-        return ids
+        return ids, cids
 
     def border_indices_from_verts(self, verts, edge_band=0):
         """
