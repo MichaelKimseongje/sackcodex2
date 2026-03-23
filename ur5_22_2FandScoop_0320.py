@@ -6,6 +6,8 @@ import math
 import pybullet as p
 import pybullet_data
 
+from sack_sparse_stabilizer import SparseSackStabilizer
+
 """
 ts:로그 확인
 t_unix: UNIX epoch time (초)/속도/가속도 추정 시 사용 가능
@@ -162,66 +164,72 @@ class DualUR5EEGuiIK:
         self.scale = 0.15
         self.mass_each = 0.20  # sheet mass (tune)
         
-        sackpath = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/object/sack.obj"
-        # sackpath = r'D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/object/sack6Apply.obj'
-        # sackpath =r'D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/object/CubeSack2.obj'
-        
+        sack_obj_path = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object/sack8.obj"
+
         SACK_OBJ = resolve_existing_path([
-            os.path.join(os.path.dirname(__file__), "sack.obj"),
-            sackpath,
+            os.path.join(os.path.dirname(__file__), "object", "sack8.obj"),
+            sack_obj_path,
         ])
 
         p.setAdditionalSearchPath(os.path.dirname(SACK_OBJ))
-        
-        sack_scale = 0.05       # Blender에서 만든 스케일에 따라 0.1~5.0 사이로 조절
-        sack_mass  = 0.1        # 겉천 총 질량 (원하는 느낌에 맞게 조절)
-        BaseLoaction=[0.50, 0.17, 0.20]#scale 0.05
 
         self.sack_obj_path = SACK_OBJ
-        self.sack_scale = sack_scale
-        self.sack_mass = sack_mass
-        self.sack_spawn_pos = [float(x) for x in BaseLoaction]
+        self.sack_scale = 0.05
+        self.sack_mass = 0.10
+        self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
 
         self.sack_id = p.loadSoftBody(
-            fileName=SACK_OBJ,
-            basePosition=BaseLoaction,     # 원하는 위치로
+            fileName=self.sack_obj_path,
+            basePosition=self.sack_spawn_pos,
             baseOrientation=self.sack_spawn_orn,
-            scale=sack_scale,
-            mass=sack_mass,
-            useNeoHookean=0,                 # 0=mass-spring(주름/천 느낌 좋음)
+            scale=self.sack_scale,
+            mass=self.sack_mass,
+            useNeoHookean=0,
             useMassSpring=1,
-            useBendingSprings=1, #접힘/굽힘 저항 on off
-            springElasticStiffness=50,      # 50~400 튜닝/ 낮을수록 잘 늘어남
-            springDampingStiffness=0.35,     # 0.1~0.5 튜닝
-            springDampingAllDirections=1, #진동 억제 on off
-            frictionCoeff=0.8,#마찰력
+            useBendingSprings=1,
+            springElasticStiffness=40.0,
+            springDampingStiffness=0.18,
+            springDampingAllDirections=1,
+            frictionCoeff=0.95,
             useSelfCollision=1,
-            useFaceContact=1, 
-            collisionMargin=0.0005            # ✅ 입자 빠져나감 줄이려면 0.003~0.008
+            useFaceContact=1,
+            repulsionStiffness=120.0,
+            collisionMargin=0.0015,
         )
-        
-        p.changeVisualShape(self.sack_id, -1, rgbaColor=[0.9, 0.85, 0.7, 0.99])
+        p.changeVisualShape(self.sack_id, -1, rgbaColor=[0.9, 0.85, 0.7, 0.0])
         p.changeVisualShape(self.sack_id, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
+
         self.initial_pos = self._capture_softbody_vertices(self.sack_id)
         self.initial_center = self.initial_pos.mean(axis=0)
         self.initial_offsets = self.initial_pos - self.initial_center
-        self.initial_radius = np.linalg.norm(self.initial_pos - self.initial_center, axis=1)
         self.initial_local_offsets = self.initial_offsets.copy()
+        self.initial_radius = np.linalg.norm(self.initial_offsets, axis=1)
         self.initial_bbox_min = self.initial_pos.min(axis=0)
         self.initial_bbox_max = self.initial_pos.max(axis=0)
         self.initial_size = self.initial_bbox_max - self.initial_bbox_min
-        self.shape_restore_enabled = True
-        self.shape_restore_k = 220.0
-        self.shape_restore_damping = 8.0
-        self.shape_restore_radial_k = 160.0
-        self.sack_mode = "soft"
+        spawn_rot = np.array(p.getMatrixFromQuaternion(self.sack_spawn_orn), dtype=np.float32).reshape(3, 3)
+        self.sack_proxy_local_center = (spawn_rot.T @ (self.initial_center - np.array(self.sack_spawn_pos, dtype=np.float32))).tolist()
+
+        self.shape_restore_enabled = False
+        self.shape_restore_k = 0.0
+        self.shape_restore_damping = 0.0
+        self.shape_restore_radial_k = 0.0
+
         self.sack_soft_id = self.sack_id
         self.sack_rigid_id = None
-        self.sack_release_duration_sec = 3.0
-        self.sack_soft_swap_distance = 0.02
-        self._sack_release_start_time = None
+        self.sack_mode = "soft"
         self.sack_gripper_links = self._collect_sack_gripper_links()
+        self.sack_soft_swap_distance = 0.0
+        self.sack_proxy_collision_scale = 0.78
+        self.sack_proxy_visual_scale = 0.72
+        self.sack_release_duration_sec = 0.35
+        self._sack_release_start_time = None
+        self.sack_stabilizer = None
+        self.sack_filler_ids = []
+        self.sack_filler_spawned = False
+        self.sack_filler_delay_steps = 0
+        self._sack_filler_step_counter = 0
 
         self._switch_sack_to_rigid(self.sack_spawn_pos, self.sack_spawn_orn)
 
@@ -872,6 +880,53 @@ class DualUR5EEGuiIK:
         return sphere_ids
     
     
+    def spawn_sack_fillers(self):
+        if self.sack_filler_spawned or self.sack_id is None:
+            return []
+
+        sphere_r = 0.004
+        sphere_mass = 0.00035
+        col = p.createCollisionShape(p.GEOM_SPHERE, radius=sphere_r)
+        verts, _ = self.get_soft_verts(self.sack_id)
+        center = verts.mean(axis=0)
+
+        ids = []
+        for dx in (-0.010, 0.0, 0.010):
+            for dy in (-0.015, 0.0, 0.015):
+                for dz in (-0.015, 0.0):
+                    pos = [float(center[0] + dx), float(center[1] + dy), float(center[2] + dz)]
+                    bid = p.createMultiBody(
+                        baseMass=sphere_mass,
+                        baseCollisionShapeIndex=col,
+                        baseVisualShapeIndex=-1,
+                        basePosition=pos,
+                    )
+                    p.changeDynamics(
+                        bid,
+                        -1,
+                        lateralFriction=0.4,
+                        spinningFriction=0.0,
+                        rollingFriction=0.0,
+                        restitution=0.0,
+                        linearDamping=0.98,
+                        angularDamping=0.98,
+                        contactProcessingThreshold=0.0,
+                    )
+                    ids.append(bid)
+
+        self.sack_filler_ids = ids
+        self.sack_filler_spawned = True
+        print(f"[SACK_FILLER] spawned {len(ids)} spheres")
+        return ids
+
+    def maybe_spawn_sack_fillers(self):
+        if self.sack_filler_spawned:
+            return
+        self._sack_filler_step_counter += 1
+        if self._sack_filler_step_counter < self.sack_filler_delay_steps:
+            return
+        self.spawn_sack_fillers()
+
     def min_border_distance_xy(self,cloth_bottom, cloth_top, edge_band=1):
         vb, vb_raw = self.get_soft_verts(cloth_bottom)
         vt, vt_raw = self.get_soft_verts(cloth_top)
@@ -943,16 +998,20 @@ class DualUR5EEGuiIK:
         return q.tolist()
 
     def _create_rigid_sack(self, base_pos, base_orn):
+        base_half = 0.5 * np.maximum(self.initial_size, 1e-4)
+        col_half = (float(getattr(self, "sack_proxy_collision_scale", 0.78)) * base_half).tolist()
+        vis_half = (float(getattr(self, "sack_proxy_visual_scale", 0.72)) * base_half).tolist()
+        frame_pos = [float(x) for x in getattr(self, "sack_proxy_local_center", [0.0, 0.0, 0.0])]
         col = p.createCollisionShape(
-            p.GEOM_MESH,
-            fileName=self.sack_obj_path,
-            meshScale=[self.sack_scale] * 3,
+            p.GEOM_BOX,
+            halfExtents=col_half,
+            collisionFramePosition=frame_pos,
         )
         vis = p.createVisualShape(
-            p.GEOM_MESH,
-            fileName=self.sack_obj_path,
-            meshScale=[self.sack_scale] * 3,
-            rgbaColor=[0.9, 0.85, 0.7, 0.99],
+            p.GEOM_BOX,
+            halfExtents=vis_half,
+            visualFramePosition=frame_pos,
+            rgbaColor=[0.82, 0.74, 0.56, 0.18],
         )
         rid = p.createMultiBody(
             baseMass=self.sack_mass,
@@ -964,13 +1023,13 @@ class DualUR5EEGuiIK:
         p.changeDynamics(
             rid,
             -1,
-            lateralFriction=2.0,
-            spinningFriction=0.05,
+            lateralFriction=2.5,
+            spinningFriction=0.08,
             rollingFriction=0.0,
             restitution=0.0,
-            linearDamping=0.2,
-            angularDamping=0.2,
-            ccdSweptSphereRadius=0.003,
+            linearDamping=0.35,
+            angularDamping=0.35,
+            ccdSweptSphereRadius=0.004,
             contactProcessingThreshold=0.0,
         )
         return rid
@@ -985,13 +1044,14 @@ class DualUR5EEGuiIK:
             useNeoHookean=0,
             useMassSpring=1,
             useBendingSprings=1,
-            springElasticStiffness=50,
-            springDampingStiffness=0.35,
+            springElasticStiffness=40.0,
+            springDampingStiffness=0.18,
             springDampingAllDirections=1,
-            frictionCoeff=0.8,
+            frictionCoeff=0.95,
             useSelfCollision=1,
             useFaceContact=1,
-            collisionMargin=0.0005,
+            repulsionStiffness=120.0,
+            collisionMargin=0.0015,
         )
         p.changeVisualShape(soft_id, -1, rgbaColor=[0.9, 0.85, 0.7, 0.99])
         p.changeVisualShape(soft_id, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
@@ -1196,7 +1256,9 @@ class DualUR5EEGuiIK:
             vmin = verts.min(axis=0)
             vmax = verts.max(axis=0)
             size = vmax - vmin
-            _, orn = p.getBasePositionAndOrientation(self.sack_id)
+            offsets = verts - center
+            rot = self._best_fit_rotation(self.initial_offsets, offsets)
+            orn = self._rotation_matrix_to_quaternion(rot)
         else:
             pos, orn = p.getBasePositionAndOrientation(self.sack_id)
             center = np.array(pos, dtype=np.float32)
