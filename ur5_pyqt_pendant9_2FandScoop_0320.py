@@ -149,20 +149,8 @@ class SimThread(QtCore.QThread):
             self.sim._apply_q(self.sim.urR, self.sim.jR, list(qR), self.sim.maxF_R)
             if getattr(self.sim, "left_gripper_target", None) is not None:
                 self.sim.set_left_gripper_opening(self.sim.left_gripper_target)
-            if hasattr(self.sim, "update_sack_mode"):
-                self.sim.update_sack_mode()
-            if getattr(self.sim, "shape_restore_enabled", False) and getattr(self.sim, "sack_mode", "soft") == "soft":
-                self.sim.apply_shape_restoration(
-                    self.sim.sack_id,
-                    self.sim.initial_pos,
-                    k=getattr(self.sim, "shape_restore_k", 30000.0),
-                    damping=getattr(self.sim, "shape_restore_damping", 1.0),
-                )
-    
-            p.stepSimulation()
 
-            if hasattr(self.sim, "update_sack_mode"):
-                self.sim.update_sack_mode()
+            p.stepSimulation()
 
             if hasattr(self.sim, "_update_sack_debug"):
                 self.sim._update_sack_debug()
