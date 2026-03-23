@@ -174,9 +174,9 @@ class DualUR5EEGuiIK:
         self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
         self.sack_rgba = [0.9, 0.85, 0.7, 0.7]
-        self.sack_collision_box_scale = [0.92, 0.94, 0.92]
-        self.sack_wall_thickness = 0.006
-        self.sack_inner_margin = 0.010
+        self.sack_collision_box_scale = [0.95, 0.97, 0.95]
+        self.sack_wall_thickness = 0.009
+        self.sack_inner_margin = 0.012
 
         self.sack_local_vertices = self._load_obj_vertices(self.sack_obj_path)
         self.sack_local_bbox_min = self.sack_local_vertices.min(axis=0)
@@ -784,16 +784,16 @@ class DualUR5EEGuiIK:
         inner = np.maximum(outer - float(self.sack_wall_thickness) - float(self.sack_inner_margin), 0.012)
         center = np.array(self.sack_visual_offset, dtype=np.float32)
 
-        radius = 0.0050
-        xs = center[0] + np.linspace(-0.20 * inner[0], 0.20 * inner[0], 3)
-        ys = center[1] + np.linspace(-0.16 * inner[1], 0.16 * inner[1], 2)
-        zs = center[2] + np.linspace(-0.16 * inner[2], 0.16 * inner[2], 2)
+        radius = 0.0043
+        xs = center[0] + np.linspace(-0.24 * inner[0], 0.24 * inner[0], 3)
+        ys = center[1] + np.linspace(-0.12 * inner[1], 0.12 * inner[1], 1)
+        zs = center[2] + np.linspace(-0.24 * inner[2], 0.24 * inner[2], 2)
 
         col = p.createCollisionShape(p.GEOM_SPHERE, radius=radius)
         vis = p.createVisualShape(p.GEOM_SPHERE, radius=radius, rgbaColor=[0.52, 0.44, 0.30, 1.0])
         ids = []
         cids = []
-        sphere_mass = 0.30
+        sphere_mass = 0.60
         for x in xs:
             for y in ys:
                 for z in zs:
