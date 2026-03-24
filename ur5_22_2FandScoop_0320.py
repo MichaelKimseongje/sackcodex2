@@ -173,7 +173,7 @@ class DualUR5EEGuiIK:
         self.sack_mass = 0.40
         self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
-        self.sack_rgba = [0.9, 0.85, 0.7, 0.7]
+        self.sack_rgba = [0.9, 0.85, 0.7, 0.8]
         self.sack_collision_box_scale = [0.95, 0.97, 0.95]
         self.sack_wall_thickness = 0.009
         self.sack_inner_margin = 0.012
