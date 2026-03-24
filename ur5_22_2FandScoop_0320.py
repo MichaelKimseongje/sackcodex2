@@ -162,9 +162,9 @@ class DualUR5EEGuiIK:
         self.scale = 0.15
         self.mass_each = 0.20  # sheet mass (tune)
 
-        sackpath = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object/sack9.obj"
+        sackpath = r"D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object/sack.obj"
         SACK_OBJ = resolve_existing_path([
-            os.path.join(os.path.dirname(__file__), "Sackcodex2", "object", "sack9.obj"),
+            os.path.join(os.path.dirname(__file__), "Sackcodex2", "object", "sack.obj"),
             sackpath,
         ])
 
@@ -188,6 +188,47 @@ class DualUR5EEGuiIK:
 
         self.sack_id = self._create_rigid_sack(self.sack_spawn_pos, self.sack_spawn_orn)
         self.sack_content_ids, self.sack_content_constraint_ids = self._spawn_sack_internal_spheres()
+
+        # Rigid handle + pseudo-soft connector tuning: graspable handle with compliant neck.
+        self.handle_enabled = True
+        self.handle_anchor_x = -0.46 * float(self.sack_local_size[0])
+        self.handle_half_width = 0.14 * float(self.sack_local_size[1])
+        self.handle_rise = -0.022
+        self.handle_forward_offset = 0.0
+        self.handle_length = 0.040
+        self.handle_thickness = 0.012
+        self.handle_depth = 0.014
+        self.handle_mass = 0.022
+        self.handle_visual_rgba = [0.72, 0.59, 0.44, 1.0]
+        self.handle_proxy_enabled = True
+        self.handle_proxy_length = 0.060
+        self.handle_proxy_thickness = 0.024
+        self.handle_proxy_depth = 0.028
+        self.handle_proxy_mass = 0.006
+        self.handle_centering_stiffness = 8.0
+        self.handle_centering_damping = 1.8
+        self.handle_centering_torque = 0.20
+        self.handle_centering_angular_damping = 0.10
+        self.handle_grasp_relaxation = 0.22
+        self.handle_connector_count = 2
+        self.handle_connector_radius = 0.0055
+        self.handle_connector_mass = 0.0035
+        self.handle_connector_stiffness = 18.0
+        self.handle_connector_damping = 1.6
+        self.handle_connector_max_force = 0.55
+        self.handle_grasp_assist_enabled = True
+        self.handle_grasp_assist_close_threshold = 0.18
+        self.handle_grasp_assist_release_threshold = 0.32
+        self.handle_grasp_assist_constraint_id = None
+        self.handle_grasp_assist_parent_link = None
+        self.handle_id = None
+        self.handle_proxy_id = None
+        self.handle_proxy_constraint_id = None
+        self.handle_connector_ids = []
+        self.handle_constraint_ids = []
+        if self.handle_enabled:
+            self._build_pseudo_soft_handle()
+
         self.shape_restore_enabled = False
         self.initial_pos = None
         self.initial_center = None
@@ -196,12 +237,15 @@ class DualUR5EEGuiIK:
 
         self.sack_debug_line_ids = {"x": None, "y": None, "z": None}
         self.sack_debug_text_id = None
+        self.sack_com_marker_ids = [None, None, None]
+        self.sack_com_text_id = None
         self.sack_debug_axis_len = 0.07
         self.sack_debug_update_sec = 0.5
         self._sack_last_debug_t = 0.0
 
         self.enable_robot_debug = False
         self.enable_sack_debug = False
+        self.enable_com_debug = True
         self.robot_debug_update_sec = 0.2
         self._robot_last_debug_t = 0.0
         self.robot_joint_marker_ids = {"L": [None]*len(self.jL), "R": [None]*len(self.jR)}
@@ -511,6 +555,7 @@ class DualUR5EEGuiIK:
             if link_idx is not None:
                 gripper_links.add(link_idx)
 
+        self.left_gripper_contact_links = set(sorted(gripper_links))
         for link_idx in sorted(gripper_links):
             self._set_link_friction(self.urL, link_idx, lateral=8.0, spinning=0.2, rolling=0.0)
 
@@ -723,6 +768,336 @@ class DualUR5EEGuiIK:
         pts = np.array(local_points, dtype=np.float32)
         return (pts @ rot.T) + np.array(base_pos, dtype=np.float32)
 
+    def _sack_pose_matrix(self):
+        pos, orn = p.getBasePositionAndOrientation(self.sack_id)
+        rot = np.array(p.getMatrixFromQuaternion(orn), dtype=np.float32).reshape(3, 3)
+        return np.array(pos, dtype=np.float32), np.array(orn, dtype=np.float32), rot
+
+    def _world_from_sack_local(self, local_points):
+        pos, _, rot = self._sack_pose_matrix()
+        pts = np.array(local_points, dtype=np.float32)
+        return (pts @ rot.T) + pos
+
+    def _handle_anchor_local_points(self):
+        left = np.array([
+            self.handle_anchor_x,
+            -self.handle_half_width,
+            self.handle_forward_offset,
+        ], dtype=np.float32)
+        right = np.array([
+            self.handle_anchor_x,
+            self.handle_half_width,
+            self.handle_forward_offset,
+        ], dtype=np.float32)
+        return left, right
+
+    def _handle_center_local(self):
+        return np.array([
+            self.handle_anchor_x + self.handle_rise,
+            0.0,
+            self.handle_forward_offset,
+        ], dtype=np.float32)
+
+    def _handle_endpoint_locals(self):
+        center = self._handle_center_local()
+        half_len = 0.5 * float(self.handle_length)
+        left = center + np.array([0.0, -half_len, 0.0], dtype=np.float32)
+        right = center + np.array([0.0, half_len, 0.0], dtype=np.float32)
+        return left, right
+
+    def _connector_chain_local_targets(self, start_local, end_local):
+        pts = []
+        count = int(self.handle_connector_count)
+        for idx in range(count):
+            t = float(idx + 1) / float(count + 1)
+            pts.append((1.0 - t) * start_local + t * end_local)
+        return pts
+
+    def _is_left_gripper_touching_handle(self):
+        grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
+        if self.urL is None or grasp_body is None:
+            return False
+        allowed_links = getattr(self, 'left_gripper_contact_links', None)
+        if not allowed_links:
+            allowed_links = set(range(-1, p.getNumJoints(self.urL)))
+        contacts = p.getContactPoints(bodyA=self.urL, bodyB=grasp_body)
+        for cp in contacts:
+            if allowed_links and cp[3] not in allowed_links:
+                continue
+            if cp[9] > 0.0:
+                return True
+        return False
+
+
+    def _release_handle_grasp_assist(self):
+        cid = getattr(self, 'handle_grasp_assist_constraint_id', None)
+        if cid is not None:
+            try:
+                p.removeConstraint(cid)
+            except Exception:
+                pass
+        self.handle_grasp_assist_constraint_id = None
+        self.handle_grasp_assist_parent_link = None
+
+    def _try_create_handle_grasp_assist(self):
+        if not getattr(self, 'handle_grasp_assist_enabled', False):
+            return False
+        grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
+        if grasp_body is None or self.urL is None:
+            return False
+        if getattr(self, 'handle_grasp_assist_constraint_id', None) is not None:
+            return True
+        closing = float(getattr(self, 'left_gripper_target', self.left_gripper_open or 1.0))
+        if closing > float(self.handle_grasp_assist_close_threshold):
+            return False
+        contacts = p.getContactPoints(bodyA=self.urL, bodyB=grasp_body)
+        if not contacts:
+            return False
+        allowed_links = getattr(self, 'left_gripper_contact_links', None)
+        valid = [cp for cp in contacts if (not allowed_links or cp[3] in allowed_links) and cp[9] > 0.0]
+        if not valid:
+            return False
+        best = max(valid, key=lambda cp: cp[9])
+        parent_link = int(best[3])
+        link_state = p.getLinkState(self.urL, parent_link, computeForwardKinematics=True)
+        parent_pos, parent_orn = link_state[4], link_state[5]
+        child_pos, child_orn = p.getBasePositionAndOrientation(grasp_body)
+        inv_pos, inv_orn = p.invertTransform(parent_pos, parent_orn)
+        parent_frame_pos, parent_frame_orn = p.multiplyTransforms(inv_pos, inv_orn, child_pos, child_orn)
+        cid = p.createConstraint(
+            self.urL, parent_link,
+            grasp_body, -1,
+            p.JOINT_FIXED,
+            [0, 0, 0],
+            parent_frame_pos,
+            [0, 0, 0],
+            parentFrameOrientation=parent_frame_orn,
+            childFrameOrientation=[0, 0, 0, 1],
+        )
+        self.handle_grasp_assist_constraint_id = cid
+        self.handle_grasp_assist_parent_link = parent_link
+        return True
+
+    def _update_handle_grasp_assist(self):
+        if not getattr(self, 'handle_grasp_assist_enabled', False):
+            return False
+        closing = float(getattr(self, 'left_gripper_target', self.left_gripper_open or 1.0))
+        if getattr(self, 'handle_grasp_assist_constraint_id', None) is not None:
+            if closing >= float(self.handle_grasp_assist_release_threshold):
+                self._release_handle_grasp_assist()
+                return False
+            return True
+        return self._try_create_handle_grasp_assist()
+
+    def _quat_from_y_axis(self, direction_world):
+        y_axis = np.array(direction_world, dtype=np.float32)
+        norm = float(np.linalg.norm(y_axis))
+        if norm < 1e-8:
+            return [0.0, 0.0, 0.0, 1.0]
+        y_axis /= norm
+        ref = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+        if abs(float(np.dot(ref, y_axis))) > 0.95:
+            ref = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+        x_axis = np.cross(ref, y_axis)
+        x_axis /= max(float(np.linalg.norm(x_axis)), 1e-8)
+        z_axis = np.cross(y_axis, x_axis)
+        rot = np.stack([x_axis, y_axis, z_axis], axis=1)
+        return self._rotation_matrix_to_quaternion(rot).tolist()
+
+    def _build_pseudo_soft_handle(self):
+        left_anchor_local, right_anchor_local = self._handle_anchor_local_points()
+        center_local = self._handle_center_local()
+        left_end_local, right_end_local = self._handle_endpoint_locals()
+        center_world = self._world_from_sack_local([center_local])[0]
+        _, _, sack_rot = self._sack_pose_matrix()
+
+        handle_half_extents = [
+            0.5 * float(self.handle_thickness),
+            0.5 * float(self.handle_length),
+            0.5 * float(self.handle_depth),
+        ]
+        handle_col = p.createCollisionShape(
+            p.GEOM_BOX,
+            halfExtents=handle_half_extents,
+        )
+        handle_vis = p.createVisualShape(
+            p.GEOM_BOX,
+            halfExtents=handle_half_extents,
+            rgbaColor=self.handle_visual_rgba,
+        )
+        self.handle_id = p.createMultiBody(
+            baseMass=float(self.handle_mass),
+            baseCollisionShapeIndex=handle_col,
+            baseVisualShapeIndex=handle_vis,
+            basePosition=center_world.tolist(),
+            baseOrientation=self._quat_from_y_axis(sack_rot[:, 1]),
+        )
+        self.handle_proxy_id = None
+        self.handle_proxy_constraint_id = None
+        p.changeDynamics(
+            self.handle_id, -1,
+            lateralFriction=9.0,
+            spinningFriction=0.25,
+            rollingFriction=0.0,
+            restitution=0.0,
+            linearDamping=0.30,
+            angularDamping=0.35,
+            contactProcessingThreshold=0.0,
+        )
+
+        self.handle_connector_ids = []
+        self.handle_constraint_ids = []
+        connector_col = p.createCollisionShape(p.GEOM_SPHERE, radius=float(self.handle_connector_radius))
+        connector_vis = p.createVisualShape(p.GEOM_SPHERE, radius=float(self.handle_connector_radius), rgbaColor=[0.66, 0.54, 0.40, 1.0])
+
+        chain_defs = [
+            (left_anchor_local, left_end_local, -0.5 * float(self.handle_length)),
+            (right_anchor_local, right_end_local, 0.5 * float(self.handle_length)),
+        ]
+        for anchor_local, end_local, handle_joint_y in chain_defs:
+            chain_local_targets = self._connector_chain_local_targets(anchor_local, end_local)
+            world_targets = self._world_from_sack_local(chain_local_targets)
+            chain_ids = []
+            for target_world in world_targets:
+                seg_id = p.createMultiBody(
+                    baseMass=float(self.handle_connector_mass),
+                    baseCollisionShapeIndex=connector_col,
+                    baseVisualShapeIndex=connector_vis,
+                    basePosition=target_world.tolist(),
+                    baseOrientation=[0.0, 0.0, 0.0, 1.0],
+                )
+                p.changeDynamics(
+                    seg_id, -1,
+                    lateralFriction=1.2,
+                    spinningFriction=0.02,
+                    rollingFriction=0.0,
+                    restitution=0.0,
+                    linearDamping=0.45,
+                    angularDamping=0.45,
+                    contactProcessingThreshold=0.0,
+                )
+                p.setCollisionFilterPair(self.sack_id, seg_id, -1, -1, 0)
+                p.setCollisionFilterPair(self.handle_id, seg_id, -1, -1, 0)
+                chain_ids.append(seg_id)
+                self.handle_connector_ids.append(seg_id)
+
+            if chain_ids:
+                cid = p.createConstraint(self.sack_id, -1, chain_ids[0], -1, p.JOINT_POINT2POINT, [0, 0, 0], anchor_local.tolist(), [0, 0, 0])
+                self.handle_constraint_ids.append(cid)
+                for a, b in zip(chain_ids[:-1], chain_ids[1:]):
+                    cid = p.createConstraint(a, -1, b, -1, p.JOINT_POINT2POINT, [0, 0, 0], [0, 0, 0], [0, 0, 0])
+                    self.handle_constraint_ids.append(cid)
+                cid = p.createConstraint(chain_ids[-1], -1, self.handle_id, -1, p.JOINT_POINT2POINT, [0, 0, 0], [0, 0, 0], [0, handle_joint_y, 0])
+                self.handle_constraint_ids.append(cid)
+
+        for a, b in zip(self.handle_connector_ids[:-1], self.handle_connector_ids[1:]):
+            p.setCollisionFilterPair(a, b, -1, -1, 0)
+
+        if getattr(self, 'handle_proxy_enabled', False):
+            proxy_half_extents = [
+                0.5 * float(self.handle_proxy_thickness),
+                0.5 * float(self.handle_proxy_length),
+                0.5 * float(self.handle_proxy_depth),
+            ]
+            proxy_col = p.createCollisionShape(p.GEOM_BOX, halfExtents=proxy_half_extents)
+            self.handle_proxy_id = p.createMultiBody(
+                baseMass=float(self.handle_proxy_mass),
+                baseCollisionShapeIndex=proxy_col,
+                baseVisualShapeIndex=-1,
+                basePosition=center_world.tolist(),
+                baseOrientation=self._quat_from_y_axis(sack_rot[:, 1]),
+            )
+            p.changeDynamics(
+                self.handle_proxy_id, -1,
+                lateralFriction=10.0,
+                spinningFriction=0.3,
+                rollingFriction=0.0,
+                restitution=0.0,
+                linearDamping=0.55,
+                angularDamping=0.55,
+                contactProcessingThreshold=0.0,
+                ccdSweptSphereRadius=0.010,
+            )
+            self.handle_proxy_constraint_id = p.createConstraint(
+                self.handle_id, -1,
+                self.handle_proxy_id, -1,
+                p.JOINT_FIXED,
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+            )
+            p.setCollisionFilterPair(self.sack_id, self.handle_proxy_id, -1, -1, 0)
+            p.setCollisionFilterPair(self.handle_id, self.handle_proxy_id, -1, -1, 0)
+            for seg_id in self.handle_connector_ids:
+                p.setCollisionFilterPair(seg_id, self.handle_proxy_id, -1, -1, 0)
+            for content_id in getattr(self, 'sack_content_ids', []):
+                p.setCollisionFilterPair(content_id, self.handle_proxy_id, -1, -1, 0)
+
+    def update_pseudo_soft_handle(self):
+        if not getattr(self, 'handle_enabled', False) or self.handle_id is None:
+            return
+
+        left_anchor_local, right_anchor_local = self._handle_anchor_local_points()
+        center_local = self._handle_center_local()
+        left_end_local, right_end_local = self._handle_endpoint_locals()
+        assist_active = self._update_handle_grasp_assist()
+        is_grasping = assist_active or self._is_left_gripper_touching_handle()
+        grasp_scale = 0.08 if assist_active else (float(self.handle_grasp_relaxation) if is_grasping else 1.0)
+
+        sack_pos, _, sack_rot = self._sack_pose_matrix()
+        handle_pos, handle_orn = p.getBasePositionAndOrientation(self.handle_id)
+        handle_lin_vel, handle_ang_vel = p.getBaseVelocity(self.handle_id)
+        handle_pos = np.array(handle_pos, dtype=np.float32)
+        handle_lin_vel = np.array(handle_lin_vel, dtype=np.float32)
+        handle_ang_vel = np.array(handle_ang_vel, dtype=np.float32)
+        target_center_world = self._world_from_sack_local([center_local])[0]
+
+        center_force = self.handle_centering_stiffness * grasp_scale * (target_center_world - handle_pos)
+        center_force -= self.handle_centering_damping * handle_lin_vel
+        force_norm = float(np.linalg.norm(center_force))
+        max_center_force = 0.55 if is_grasping else 1.4
+        if force_norm > max_center_force:
+            center_force *= (max_center_force / max(force_norm, 1e-8))
+        p.applyExternalForce(self.handle_id, -1, center_force.tolist(), handle_pos.tolist(), p.WORLD_FRAME)
+
+        handle_rot = np.array(p.getMatrixFromQuaternion(handle_orn), dtype=np.float32).reshape(3, 3)
+        handle_axis = handle_rot[:, 1]
+        target_axis = sack_rot[:, 1]
+        axis_torque = self.handle_centering_torque * grasp_scale * np.cross(handle_axis, target_axis)
+        axis_torque -= self.handle_centering_angular_damping * handle_ang_vel
+        torque_norm = float(np.linalg.norm(axis_torque))
+        max_center_torque = 0.05 if is_grasping else 0.12
+        if torque_norm > max_center_torque:
+            axis_torque *= (max_center_torque / max(torque_norm, 1e-8))
+        p.applyExternalTorque(self.handle_id, -1, axis_torque.tolist(), p.WORLD_FRAME)
+
+        target_pairs = [
+            (left_anchor_local, left_end_local, self.handle_connector_ids[:self.handle_connector_count]),
+            (right_anchor_local, right_end_local, self.handle_connector_ids[self.handle_connector_count:]),
+        ]
+        for anchor_local, end_local, chain_ids in target_pairs:
+            if not chain_ids:
+                continue
+            handle_end_world = self._transform_points(handle_pos, handle_orn, [[0.0, -0.5 * float(self.handle_length), 0.0] if end_local[1] < 0 else [0.0, 0.5 * float(self.handle_length), 0.0]])[0]
+            chain_targets_local = self._connector_chain_local_targets(anchor_local, end_local)
+            anchor_world = self._world_from_sack_local([anchor_local])[0]
+            chain_targets_world = []
+            count = len(chain_ids)
+            for idx in range(count):
+                t = float(idx + 1) / float(count + 1)
+                chain_targets_world.append((1.0 - t) * anchor_world + t * handle_end_world)
+
+            for seg_id, seg_target in zip(chain_ids, chain_targets_world):
+                seg_pos, _ = p.getBasePositionAndOrientation(seg_id)
+                seg_lin_vel, _ = p.getBaseVelocity(seg_id)
+                seg_pos = np.array(seg_pos, dtype=np.float32)
+                seg_lin_vel = np.array(seg_lin_vel, dtype=np.float32)
+                force = self.handle_connector_stiffness * grasp_scale * (np.array(seg_target, dtype=np.float32) - seg_pos)
+                force -= self.handle_connector_damping * seg_lin_vel
+                force_norm = float(np.linalg.norm(force))
+                if force_norm > self.handle_connector_max_force:
+                    force *= (self.handle_connector_max_force / max(force_norm, 1e-8))
+                p.applyExternalForce(seg_id, -1, force.tolist(), seg_pos.tolist(), p.WORLD_FRAME)
     def _create_rigid_sack(self, base_pos, base_orn):
         outer = 0.5 * np.array(self.sack_local_size, dtype=np.float32)
         outer = outer * np.array(self.sack_collision_box_scale, dtype=np.float32)
@@ -989,7 +1364,38 @@ class DualUR5EEGuiIK:
         return np.eye(3, dtype=np.float32)
 
     def _rotation_matrix_to_quaternion(self, rot):
-        return np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        r = np.array(rot, dtype=np.float64)
+        trace = float(np.trace(r))
+        if trace > 0.0:
+            s = math.sqrt(trace + 1.0) * 2.0
+            qw = 0.25 * s
+            qx = (r[2, 1] - r[1, 2]) / s
+            qy = (r[0, 2] - r[2, 0]) / s
+            qz = (r[1, 0] - r[0, 1]) / s
+        else:
+            diag = np.diag(r)
+            idx = int(np.argmax(diag))
+            if idx == 0:
+                s = math.sqrt(max(1.0 + r[0, 0] - r[1, 1] - r[2, 2], 1e-12)) * 2.0
+                qw = (r[2, 1] - r[1, 2]) / s
+                qx = 0.25 * s
+                qy = (r[0, 1] + r[1, 0]) / s
+                qz = (r[0, 2] + r[2, 0]) / s
+            elif idx == 1:
+                s = math.sqrt(max(1.0 + r[1, 1] - r[0, 0] - r[2, 2], 1e-12)) * 2.0
+                qw = (r[0, 2] - r[2, 0]) / s
+                qx = (r[0, 1] + r[1, 0]) / s
+                qy = 0.25 * s
+                qz = (r[1, 2] + r[2, 1]) / s
+            else:
+                s = math.sqrt(max(1.0 + r[2, 2] - r[0, 0] - r[1, 1], 1e-12)) * 2.0
+                qw = (r[1, 0] - r[0, 1]) / s
+                qx = (r[0, 2] + r[2, 0]) / s
+                qy = (r[1, 2] + r[2, 1]) / s
+                qz = 0.25 * s
+        quat = np.array([qx, qy, qz, qw], dtype=np.float32)
+        norm = max(float(np.linalg.norm(quat)), 1e-8)
+        return quat / norm
 
     def _iter_robot_contact_pairs(self):
         return []
@@ -1002,6 +1408,46 @@ class DualUR5EEGuiIK:
 
     def apply_shape_restoration(self, soft_id, initial_pos, k=30.0, damping=1.0):
         return
+
+    def _get_sack_payload_com(self):
+        bodies = [(self.sack_id, float(self.sack_mass))]
+        for bid in getattr(self, 'sack_content_ids', []):
+            try:
+                mass = float(p.getDynamicsInfo(bid, -1)[0])
+            except Exception:
+                mass = 0.0
+            if mass > 0.0:
+                bodies.append((bid, mass))
+        total = 0.0
+        accum = np.zeros(3, dtype=np.float32)
+        for bid, mass in bodies:
+            pos, _ = p.getBasePositionAndOrientation(bid)
+            accum += mass * np.array(pos, dtype=np.float32)
+            total += mass
+        if total <= 1e-8:
+            return None
+        return accum / total
+
+    def _update_sack_com_debug(self, force=False):
+        if not getattr(self, 'enable_com_debug', True):
+            return
+        now = time.time()
+        if (not force) and (now - self._sack_last_debug_t < self.sack_debug_update_sec):
+            return
+        com = self._get_sack_payload_com()
+        if com is None:
+            return
+        self.sack_com_marker_ids = self._draw_cross_marker(
+            com.tolist(), [1, 0, 0], self.robot_ee_marker_half * 1.2, self.sack_com_marker_ids
+        )
+        self.sack_com_text_id = p.addUserDebugText(
+            f'COM ({com[0]:.3f},{com[1]:.3f},{com[2]:.3f})',
+            com.tolist(),
+            textColorRGB=[1, 0.2, 0.2],
+            textSize=1.1,
+            lifeTime=0,
+            replaceItemUniqueId=self.sack_com_text_id if self.sack_com_text_id is not None else -1,
+        )
 
     def _get_sack_state(self):
         pos, orn = p.getBasePositionAndOrientation(self.sack_id)
