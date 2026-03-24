@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Created on Thu Mar  5 17:05:04 2026
 
@@ -89,7 +89,7 @@ class ProbeFK:
         return np.array(pos + rpy, dtype=np.float32)
 
 class SimThread(QtCore.QThread):
-    sig_state = QtCore.pyqtSignal(dict)  # UI로 상태 전달
+    sig_state = QtCore.pyqtSignal(dict)  # UI濡??곹깭 ?꾨떖
 
     def __init__(self, sim: DualUR5EEGuiIK, lock: threading.Lock, shared: dict, parent=None):
         super().__init__(parent)
@@ -205,7 +205,7 @@ class Pendant(QtWidgets.QWidget):
                              self.sim._get_ee_pose(self.sim.urR, self.sim.eeR)[1], dtype=np.float32),
             "L_q": np.array([p.getJointState(self.sim.urL, jid)[0] for jid in self.sim.jL], dtype=np.float32),
             "R_q": np.array([p.getJointState(self.sim.urR, jid)[0] for jid in self.sim.jR], dtype=np.float32),
-            "sleep_dt": 1.0/240.0,  # 0이면 가능한 빠르게(권장). 필요하면 1/240 등
+            "sleep_dt": 1.0/240.0,  # 0?대㈃ 媛?ν븳 鍮좊Ⅴ寃?沅뚯옣). ?꾩슂?섎㈃ 1/240 ??
         }
         
         self.ctrl_mode = "single"  # "single" or "dual"
@@ -386,7 +386,7 @@ class Pendant(QtWidgets.QWidget):
 
     
     def _commit_pending_to_shared(self):
-        """pending -> shared (시뮬에 반영되는 값 업데이트)"""
+        """pending -> shared (?쒕???諛섏쁺?섎뒗 媛??낅뜲?댄듃)"""
         with self.lock:
             self.shared["L_q"] = self.pending["L_q"].copy()
             self.shared["R_q"] = self.pending["R_q"].copy()
@@ -398,8 +398,8 @@ class Pendant(QtWidgets.QWidget):
     
     def _make_slider_spin(self, lo, hi, val, step=0.001, decimals=4):
         """
-        float 범위(lo~hi)를 QSlider(int)로 매핑 + QDoubleSpinBox 동기화
-        슬라이더 움직이면 즉시 valueChanged가 발생해서 로봇이 바로 움직이게 함.
+        float 踰붿쐞(lo~hi)瑜?QSlider(int)濡?留ㅽ븨 + QDoubleSpinBox ?숆린??
+        ?щ씪?대뜑 ?吏곸씠硫?利됱떆 valueChanged媛 諛쒖깮?댁꽌 濡쒕큸??諛붾줈 ?吏곸씠寃???
         """
         sp = QtWidgets.QDoubleSpinBox()
         sp.setRange(lo, hi)
@@ -433,7 +433,7 @@ class Pendant(QtWidgets.QWidget):
         def on_slider(i):
             x = i_to_x(i)
             if abs(sp.value() - x) > (step * 0.25):
-                sp.setValue(x)  # ✅ 여기서 sp.valueChanged가 발생 -> 너의 _on_ee_changed/_on_j_changed가 바로 호출됨
+                sp.setValue(x)  # ???ш린??sp.valueChanged媛 諛쒖깮 -> ?덉쓽 _on_ee_changed/_on_j_changed媛 諛붾줈 ?몄텧??
     
         def on_spin(x):
             with QtCore.QSignalBlocker(sl):
@@ -451,7 +451,7 @@ class Pendant(QtWidgets.QWidget):
         return sl, sp
 
     def _set_pair_value(self, sp, x):
-        """프로그램이 값을 바꿀 때 spin + slider 위치를 같이 맞춘다."""
+        """?꾨줈洹몃옩??媛믪쓣 諛붽? ??spin + slider ?꾩튂瑜?媛숈씠 留욎텣??"""
         x = float(x)
     
         with QtCore.QSignalBlocker(sp):
@@ -465,7 +465,7 @@ class Pendant(QtWidgets.QWidget):
 
     
     def _row_widget(self, spin, slider):
-        """FormLayout 한 줄에 (SpinBox + Slider) 같이 넣기 위한 row 위젯"""
+        """FormLayout ??以꾩뿉 (SpinBox + Slider) 媛숈씠 ?ｊ린 ?꾪븳 row ?꾩젽"""
         w = QtWidgets.QWidget()
         h = QtWidgets.QHBoxLayout(w)
         h.setContentsMargins(0, 0, 0, 0)
@@ -518,9 +518,15 @@ class Pendant(QtWidgets.QWidget):
 
         btn_above = QtWidgets.QPushButton("Go above sack center")
         btn_above.clicked.connect(self._move_left_above_sack_center)
+        btn_grasp = QtWidgets.QPushButton("Go grasp handle")
+        btn_grasp.clicked.connect(self._move_left_to_handle_grasp)
+        btn_auto = QtWidgets.QPushButton("Auto grasp + lift")
+        btn_auto.clicked.connect(self._auto_grasp_and_lift_handle)
 
         form.addRow("Clearance [m]", clearance_spin)
         form.addRow(btn_above)
+        form.addRow(btn_grasp)
+        form.addRow(btn_auto)
         return box
 
     def _build_arm_panel(self, arm="L"):
@@ -612,7 +618,7 @@ class Pendant(QtWidgets.QWidget):
     
         pack = {
             "ee": [sx, sy, sz, sR, sP, sY],
-            "j":  [pair[0] for pair in j_pairs],   # spin만
+            "j":  [pair[0] for pair in j_pairs],   # spin留?
             "lab_ee": lab_ee,
             "lab_q": lab_q,
             "lab_joint_xyz": lab_joint_xyz,
@@ -801,7 +807,7 @@ class Pendant(QtWidgets.QWidget):
 
     def _apply_from_ee(self, arm):
         ee6 = self._read_ui_ee(arm)
-        with self.lock:  # ✅ IK가 bullet 호출
+        with self.lock:  # ??IK媛 bullet ?몄텧
             if arm == "L":
                 q = self.sim._ik_to_joints(self.sim.urL, self.sim.eeL, self.sim.jL, ee6, self.sim.homeL)
                 self.pending["L_q"] = np.array(q, dtype=np.float32)
@@ -987,6 +993,51 @@ class Pendant(QtWidgets.QWidget):
         self._write_ui_ee("L", ee6)
         self._commit_if_single()
 
+
+    def _move_left_to_handle_grasp(self):
+        with self.lock:
+            if not hasattr(self.sim, "get_handle_grasp_target"):
+                return
+            target_pos, target_rpy, target_opening = self.sim.get_handle_grasp_target()
+            if target_pos is None:
+                return
+            ee6 = np.array(list(target_pos) + list(target_rpy), dtype=np.float32)
+            q6 = np.array(
+                self.sim._ik_to_joints(self.sim.urL, self.sim.eeL, self.sim.jL, ee6, self.sim.homeL),
+                dtype=np.float32,
+            )
+            self.pending["L_q"] = q6.copy()
+            self.pending["L_ee"] = ee6.copy()
+            if getattr(self.sim, "left_gripper_joint", None) is not None:
+                self.sim.set_left_gripper_opening(float(target_opening))
+
+        self._write_ui_q("L", q6)
+        self._write_ui_ee("L", ee6)
+        if self.left_gripper_ui is not None:
+            self._set_pair_value(self.left_gripper_ui, float(target_opening))
+        self._commit_if_single()
+
+
+    def _auto_grasp_and_lift_handle(self):
+        with self.lock:
+            if not hasattr(self.sim, 'auto_grasp_and_lift_left_handle'):
+                return
+            ok = bool(self.sim.auto_grasp_and_lift_left_handle())
+            q_now = np.array([p.getJointState(self.sim.urL, jid)[0] for jid in self.sim.jL], dtype=np.float32)
+            pos, rpy = self.sim._get_ee_pose(self.sim.urL, self.sim.eeL)
+            ee6 = np.array(pos + rpy, dtype=np.float32)
+            self.pending['L_q'] = q_now.copy()
+            self.pending['L_ee'] = ee6.copy()
+            opening = float(getattr(self.sim, 'left_gripper_target', 0.0))
+
+        self._write_ui_q('L', q_now)
+        self._write_ui_ee('L', ee6)
+        if self.left_gripper_ui is not None:
+            self._set_pair_value(self.left_gripper_ui, opening)
+        self._commit_if_single()
+        if hasattr(self, 'labSack'):
+            self.labSack.setText(self.labSack.text() + ("\nAUTO GRASP+LIFT: OK" if ok else "\nAUTO GRASP+LIFT: FAIL"))
+
     def _stop_thread(self):
         if self.th.isRunning():
             self.th.stop()
@@ -1029,3 +1080,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

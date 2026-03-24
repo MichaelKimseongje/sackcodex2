@@ -1,4 +1,4 @@
-import time
+﻿import time
 import numpy as np
 import os, json
 import math
@@ -7,15 +7,15 @@ import pybullet as p
 import pybullet_data
 
 """
-ts:로그 확인
-t_unix: UNIX epoch time (초)/속도/가속도 추정 시 사용 가능
-Left_X, Left_Y, Left_Z, Right_X, Right_Y, Right_Z: Left / Right EE 목표값
-Left_Roll, Left_Pitch, Left_Yaw, Right_Roll, Right_Pitch, Right_Yaw: 엔드이펙터의 롤/피치/요 [rad]
-qL, qR: 실제 로봇 관절 각도/강화학습에서 가장 좋은 “행동” 형태
-eeL, eeR: 실제 도달한 EE 포즈 (결과)
+ts:濡쒓렇 ?뺤씤
+t_unix: UNIX epoch time (珥?/?띾룄/媛?띾룄 異붿젙 ???ъ슜 媛??
+Left_X, Left_Y, Left_Z, Right_X, Right_Y, Right_Z: Left / Right EE 紐⑺몴媛?
+Left_Roll, Left_Pitch, Left_Yaw, Right_Roll, Right_Pitch, Right_Yaw: ?붾뱶?댄럺?곗쓽 濡??쇱튂/??[rad]
+qL, qR: ?ㅼ젣 濡쒕큸 愿??媛곷룄/媛뺥솕?숈뒿?먯꽌 媛??醫뗭? ?쒗뻾?쇺??뺥깭
+eeL, eeR: ?ㅼ젣 ?꾨떖??EE ?ъ쫰 (寃곌낵)
 
 20260109
-충돌 제한 기구학 기반 캘리브레이션으로 확인
+異⑸룎 ?쒗븳 湲곌뎄??湲곕컲 罹섎━釉뚮젅?댁뀡?쇰줈 ?뺤씤
 """
 
 def clamp(x, lo, hi):
@@ -56,7 +56,7 @@ class DualUR5EEGuiIK:
 
         p.setPhysicsEngineParameter(
             fixedTimeStep=self.dt,
-            numSubSteps=2, # 4 -> 1  (체감 제일 큼)#ur5_16
+            numSubSteps=2, # 4 -> 1  (泥닿컧 ?쒖씪 ??#ur5_16
             numSolverIterations=80, # 150 -> 80#ur5_16
             deterministicOverlappingPairs=1
         )
@@ -129,13 +129,13 @@ class DualUR5EEGuiIK:
         self.torque_limit_L = [150,150,150,28,28,28]
         self.torque_limit_R = [150,150,150,28,28,28]
 
-        self.kp = 0.35        # positionGain (0.05~0.25 사이 추천)
-        self.kd = 0.8         # velocityGain 느낌 (PyBullet setJointMotorControl2에서 velocityGain으로 사용)
-        self.maxVel = 2.5     # 관절 최대 속도 제한(너무 크면 튐)
+        self.kp = 0.35        # positionGain (0.05~0.25 ?ъ씠 異붿쿇)
+        self.kd = 0.8         # velocityGain ?먮굦 (PyBullet setJointMotorControl2?먯꽌 velocityGain?쇰줈 ?ъ슜)
+        self.maxVel = 1.4     # auto grasp/lift? ? ??? ??? ??
 
-        self.joint_damping = [0.08]*6  # 0.02~0.2 추천
+        self.joint_damping = [0.08]*6  # 0.02~0.2 異붿쿇
 
-        self.alpha = 0.15     # 0.1~0.3 추천 (작을수록 덜 튐)
+        self.alpha = 0.15     # 0.1~0.3 異붿쿇 (?묒쓣?섎줉 ????
 
         self.homeL = [-1.57, -1.54,  1.34, -1.37, -1.57, 0.001]
         self.homeR = [ 1.57, -1.54,  1.34, -1.37, -1.57, 0.001]
@@ -169,7 +169,7 @@ class DualUR5EEGuiIK:
         ])
 
         self.sack_obj_path = SACK_OBJ
-        self.sack_scale = 0.05
+        self.sack_scale = 0.07
         self.sack_mass = 0.40
         self.sack_spawn_pos = [0.50, 0.17, 0.20]
         self.sack_spawn_orn = p.getQuaternionFromEuler([0, 1.57, 0])
@@ -205,6 +205,16 @@ class DualUR5EEGuiIK:
         self.handle_proxy_thickness = 0.024
         self.handle_proxy_depth = 0.028
         self.handle_proxy_mass = 0.006
+        self.handle_grasp_pose_rpy = [0.0, -math.pi / 2.0, -math.pi / 2.0]
+        self.handle_grasp_pose_offset = [0.0, -0.02, 0.050]
+        self.handle_pregrasp_offset = [0.010, 0.0, 0.060]
+        self.handle_grasp_opening = 0.08
+        self.handle_grasp_close_opening = 0.56
+        self.handle_grasp_attach_distance = 0.200
+        self.handle_grasp_approach_steps = 240
+        self.handle_grasp_close_steps = 260
+        self.handle_lift_steps = 320
+        self.handle_lift_height = 0.08
         self.handle_centering_stiffness = 8.0
         self.handle_centering_damping = 1.8
         self.handle_centering_torque = 0.20
@@ -217,8 +227,8 @@ class DualUR5EEGuiIK:
         self.handle_connector_damping = 1.6
         self.handle_connector_max_force = 0.55
         self.handle_grasp_assist_enabled = True
-        self.handle_grasp_assist_close_threshold = 0.18
-        self.handle_grasp_assist_release_threshold = 0.32
+        self.handle_grasp_assist_close_threshold = 0.50
+        self.handle_grasp_assist_release_threshold = 0.25
         self.handle_grasp_assist_constraint_id = None
         self.handle_grasp_assist_parent_link = None
         self.handle_id = None
@@ -262,7 +272,7 @@ class DualUR5EEGuiIK:
         
 
         # s=2
-        # mass0=0.003#kg단위
+        # mass0=0.003#kg?⑥쐞
         # bean_ids = self.spawn_clump_grid(ClumpType=3,
         #     r=0.003*s, vis_scale=0.003*s,mass=mass0*(s**3),
             
@@ -295,12 +305,12 @@ class DualUR5EEGuiIK:
         self.torque_limit_R = [150,150,150,28,28,28]
 
         self._torque_last_print_t = 0.0
-        self._torque_print_interval = 0.25  # 0.25초에 1번만 출력
-        self._torque_ratio_th = 1.0         # 1.0이면 리밋 초과만, 0.8이면 80% 경고
+        self._torque_print_interval = 0.25  # 0.25珥덉뿉 1踰덈쭔 異쒕젰
+        self._torque_ratio_th = 1.0         # 1.0?대㈃ 由щ컠 珥덇낵留? 0.8?대㈃ 80% 寃쎄퀬
         
         self.sat_count_L = 0
         self.sat_count_R = 0
-        self.sat_warn_frames = 30   # 240Hz 기준 0.125초 (원하면 60=0.25초)
+        self.sat_warn_frames = 30   # 240Hz 湲곗? 0.125珥?(?먰븯硫?60=0.25珥?
         
         self.cmd = {
             "L_mode": 0,  # 0=EE,1=J
@@ -332,8 +342,8 @@ class DualUR5EEGuiIK:
     
     def create_clump_collision(self, r, offsets):
         """
-        offsets: [[x,y,z], ...] 각 구의 중심 오프셋 (m)
-        r: 각 구 반지름 (m)
+        offsets: [[x,y,z], ...] 媛?援ъ쓽 以묒떖 ?ㅽ봽??(m)
+        r: 媛?援?諛섏?由?(m)
         """
         n = len(offsets)
         col = p.createCollisionShapeArray(
@@ -375,7 +385,7 @@ class DualUR5EEGuiIK:
                      use_mesh_visual=False, mesh_path=None, vis_scale=0.003):
 
         if d is None:
-            d = 1.5 * r  # 시작값
+            d = 1.5 * r  # ?쒖옉媛?
     
         if ClumpType == 3:
             offsets = self.offsets_tri(d)
@@ -387,7 +397,7 @@ class DualUR5EEGuiIK:
         col = self.create_clump_collision(r, offsets)
     
         if use_mesh_visual and mesh_path is not None:
-            vis = self.create_bean_visual(mesh_path, vis_scale)  # 네 기존 mesh visual
+            vis = self.create_bean_visual(mesh_path, vis_scale)  # ??湲곗〈 mesh visual
         else:
             vis = self.create_clump_visual(r, offsets)
     
@@ -395,7 +405,7 @@ class DualUR5EEGuiIK:
             dyn = dict(
                 lateralFriction=3.0,
                 spinningFriction=0.05,
-                rollingFriction=0.08,     # ✅ 0.02 -> 0.05~0.15 올려봐 (쌓임에 도움)
+                rollingFriction=0.08,     # ??0.02 -> 0.05~0.15 ?щ젮遊?(?볦엫???꾩?)
                 restitution=0.0,
                 linearDamping=0.9,
                 angularDamping=0.9,
@@ -429,7 +439,7 @@ class DualUR5EEGuiIK:
             dyn = dict(
                 lateralFriction=3.0,
                 spinningFriction=0.02,
-                rollingFriction=0.02,     # ✅ 핵심: 구슬-유체화 방지
+                rollingFriction=0.02,     # ???듭떖: 援ъ뒳-?좎껜??諛⑹?
                 restitution=0.0,
                 linearDamping=0.9,
                 angularDamping=0.9,
@@ -682,7 +692,7 @@ class DualUR5EEGuiIK:
             return self.sat_count_R >= self.sat_warn_frames
 
     def _draw_torque_texts(self, rid, joint_ids, taus, limits, text_ids, prefix="L"):
-        """관절 근처에 토크 표시. limit 초과면 빨간색."""
+        """愿??洹쇱쿂???좏겕 ?쒖떆. limit 珥덇낵硫?鍮④컙??"""
         for k, (jid, tau, lim) in enumerate(zip(joint_ids, taus, limits)):
             try:
                 ls = p.getLinkState(rid, jid, computeForwardKinematics=True)
@@ -701,7 +711,7 @@ class DualUR5EEGuiIK:
                     txt, pos,
                     textColorRGB=color,
                     textSize=1.2,
-                    lifeTime=0,  # 0이면 유지됨(우리가 replace로 업데이트)
+                    lifeTime=0,  # 0?대㈃ ?좎????곕━媛 replace濡??낅뜲?댄듃)
                 )
             else:
                 text_ids[k] = p.addUserDebugText(
@@ -747,7 +757,7 @@ class DualUR5EEGuiIK:
     def torque_saturation_ratio(self, robot_id, joint_ids, maxF):
         taus = [float(p.getJointState(robot_id, jid)[3]) for jid in joint_ids]
         ratios = [abs(t)/mf if mf>1e-6 else 0.0 for t, mf in zip(taus, maxF)]
-        sat = any(r > 0.95 for r in ratios)  # 95% 이상이면 포화로 판단
+        sat = any(r > 0.95 for r in ratios)  # 95% ?댁긽?대㈃ ?ы솕濡??먮떒
         return taus, ratios, sat
     
     
@@ -813,6 +823,178 @@ class DualUR5EEGuiIK:
             pts.append((1.0 - t) * start_local + t * end_local)
         return pts
 
+
+    def _left_gripper_grasp_links(self):
+        names = [
+            'left_inner_finger_pad',
+            'right_inner_finger_pad',
+            'left_inner_finger',
+            'right_inner_finger',
+        ]
+        out = []
+        for name in names:
+            idx = self._find_link_or_none(self.urL, [name])
+            if idx is not None:
+                out.append(idx)
+        return out
+
+    def _move_left_arm_to_q(self, q, steps=120, gripper_opening=None):
+        q = np.array(q[:len(self.jL)], dtype=np.float32)
+        steps = max(1, int(steps))
+        q0 = np.array([p.getJointState(self.urL, jid)[0] for jid in self.jL], dtype=np.float32)
+        for alpha in np.linspace(0.0, 1.0, steps):
+            qi = (1.0 - alpha) * q0 + alpha * q
+            self._apply_q(self.urL, self.jL, list(qi), self.maxF_L)
+            if gripper_opening is not None:
+                self.set_left_gripper_opening(float(gripper_opening))
+            self.update_pseudo_soft_handle()
+            p.stepSimulation()
+
+    def _move_left_ee_linearly(self, target_pos, steps=240, gripper_opening=None, rest_pose=None):
+        target_pos = np.array(target_pos, dtype=np.float32)
+        steps = max(1, int(steps))
+        control_link = self.plateL if self.plateL is not None else self.eeL
+        start_pos = np.array(p.getLinkState(self.urL, control_link, computeForwardKinematics=True)[4], dtype=np.float32)
+        if rest_pose is None:
+            rest_pose = np.array([p.getJointState(self.urL, jid)[0] for jid in self.jL], dtype=np.float32)
+        else:
+            rest_pose = np.array(rest_pose[:len(self.jL)], dtype=np.float32)
+        last_q = rest_pose.copy()
+        for alpha in np.linspace(0.0, 1.0, steps):
+            pos = (1.0 - alpha) * start_pos + alpha * target_pos
+            q = p.calculateInverseKinematics(
+                self.urL,
+                control_link,
+                list(map(float, pos)),
+                restPoses=list(map(float, last_q)),
+            )
+            q = np.array(q[:len(self.jL)], dtype=np.float32)
+            for jid, qi in zip(self.jL, q):
+                p.resetJointState(self.urL, jid, float(qi))
+            if gripper_opening is not None:
+                self.set_left_gripper_opening(float(gripper_opening))
+            self.update_pseudo_soft_handle()
+            p.stepSimulation()
+            last_q = q
+        return last_q
+
+    def _solve_left_handle_grasp_q(self, target_pos=None, target_rpy=None):
+        if target_pos is None:
+            target_pos, _, _ = self.get_handle_grasp_target()
+        q = p.calculateInverseKinematics(self.urL, self.eeL, list(map(float, target_pos)), restPoses=self.homeL)
+        return np.array(q[:len(self.jL)], dtype=np.float32)
+
+    def _left_gripper_pad_center_world(self):
+        pad_names = ['left_inner_finger_pad', 'right_inner_finger_pad']
+        pts = []
+        for name in pad_names:
+            idx = self._find_link_or_none(self.urL, [name])
+            if idx is None:
+                continue
+            ls = p.getLinkState(self.urL, idx, computeForwardKinematics=True)
+            pts.append(np.array(ls[4], dtype=np.float32))
+        if len(pts) >= 2:
+            return 0.5 * (pts[0] + pts[1])
+        link_idx = self.plateL if self.plateL is not None else self.eeL
+        return np.array(p.getLinkState(self.urL, link_idx, computeForwardKinematics=True)[4], dtype=np.float32)
+
+    def _left_control_target_for_pad_center(self, desired_pad_center_world):
+        control_link = self.plateL if self.plateL is not None else self.eeL
+        control_pos = np.array(p.getLinkState(self.urL, control_link, computeForwardKinematics=True)[4], dtype=np.float32)
+        pad_center = self._left_gripper_pad_center_world()
+        offset = pad_center - control_pos
+        return np.array(desired_pad_center_world, dtype=np.float32) - offset
+
+    def _try_force_attach_left_gripper_to_handle(self, max_distance=None):
+        grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
+        if grasp_body is None:
+            return False
+        if getattr(self, 'handle_grasp_assist_constraint_id', None) is not None:
+            return True
+        if max_distance is None:
+            max_distance = float(self.handle_grasp_attach_distance)
+        handle_pos, _ = p.getBasePositionAndOrientation(grasp_body)
+        handle_pos = np.array(handle_pos, dtype=np.float32)
+
+        parent_link = int(self.plateL if self.plateL is not None else self.eeL)
+        link_state = p.getLinkState(self.urL, parent_link, computeForwardKinematics=True)
+        parent_pos = np.array(link_state[4], dtype=np.float32)
+        parent_orn = link_state[5]
+        grip_center_world = self._left_gripper_pad_center_world()
+        if float(np.linalg.norm(grip_center_world - handle_pos)) > float(max_distance):
+            return False
+
+        child_pos, child_orn = p.getBasePositionAndOrientation(grasp_body)
+        inv_pos, inv_orn = p.invertTransform(parent_pos, parent_orn)
+        grip_center_local, _ = p.multiplyTransforms(inv_pos, inv_orn, grip_center_world.tolist(), [0, 0, 0, 1])
+        _, parent_frame_orn = p.multiplyTransforms(inv_pos, inv_orn, child_pos, child_orn)
+        cid = p.createConstraint(
+            self.urL, parent_link,
+            grasp_body, -1,
+            p.JOINT_FIXED,
+            [0, 0, 0],
+            grip_center_local,
+            [0, 0, 0],
+            parentFrameOrientation=parent_frame_orn,
+            childFrameOrientation=[0, 0, 0, 1],
+        )
+        self.handle_grasp_assist_constraint_id = cid
+        self.handle_grasp_assist_parent_link = parent_link
+        return True
+
+    def auto_grasp_and_lift_left_handle(self, lift_height=None):
+        grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
+        if grasp_body is None:
+            return False
+        if lift_height is None:
+            lift_height = float(self.handle_lift_height)
+        open_opening = float(self.handle_grasp_opening)
+        close_opening = float(self.handle_grasp_close_opening)
+
+        self._release_handle_grasp_assist()
+
+        for _ in range(30):
+            self.set_left_gripper_opening(open_opening)
+            self.update_pseudo_soft_handle()
+            p.stepSimulation()
+
+        handle_pos = np.array(p.getBasePositionAndOrientation(grasp_body)[0], dtype=np.float32)
+        stage1_pad = handle_pos + np.array([0.0, -0.18, 0.18], dtype=np.float32)
+        stage2_pad = handle_pos + np.array([0.0, -0.10, 0.12], dtype=np.float32)
+        stage3_pad = handle_pos + np.array(self.handle_grasp_pose_offset, dtype=np.float32)
+
+        stage1_pos = self._left_control_target_for_pad_center(stage1_pad)
+        q_stage1 = self._move_left_ee_linearly(stage1_pos, steps=max(220, int(self.handle_grasp_approach_steps)), gripper_opening=open_opening)
+        stage2_pos = self._left_control_target_for_pad_center(stage2_pad)
+        q_stage2 = self._move_left_ee_linearly(stage2_pos, steps=max(220, int(self.handle_grasp_approach_steps)), gripper_opening=open_opening, rest_pose=q_stage1)
+        stage3_pos = self._left_control_target_for_pad_center(stage3_pad)
+        q_grasp = self._move_left_ee_linearly(stage3_pos, steps=max(220, int(self.handle_grasp_approach_steps)), gripper_opening=open_opening, rest_pose=q_stage2)
+
+        for val in np.linspace(open_opening, close_opening, int(self.handle_grasp_close_steps)):
+            for jid, qi in zip(self.jL, q_grasp):
+                p.resetJointState(self.urL, jid, float(qi))
+            self.set_left_gripper_opening(float(val))
+            if val >= float(self.handle_grasp_assist_close_threshold):
+                self._try_create_handle_grasp_assist()
+            self.update_pseudo_soft_handle()
+            p.stepSimulation()
+
+        if getattr(self, 'handle_grasp_assist_constraint_id', None) is None:
+            return False
+
+        for _ in range(50):
+            for jid, qi in zip(self.jL, q_grasp):
+                p.resetJointState(self.urL, jid, float(qi))
+            self.set_left_gripper_opening(close_opening)
+            self.update_pseudo_soft_handle()
+            p.stepSimulation()
+
+        control_link = self.plateL if self.plateL is not None else self.eeL
+        ee_pos = np.array(p.getLinkState(self.urL, control_link, computeForwardKinematics=True)[4], dtype=np.float32)
+        lift_target = ee_pos + np.array([0.0, 0.0, float(lift_height)], dtype=np.float32)
+        self._move_left_ee_linearly(lift_target, steps=max(280, int(self.handle_lift_steps)), gripper_opening=close_opening, rest_pose=q_grasp)
+        return True
+
     def _is_left_gripper_touching_handle(self):
         grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
         if self.urL is None or grasp_body is None:
@@ -848,7 +1030,7 @@ class DualUR5EEGuiIK:
         if getattr(self, 'handle_grasp_assist_constraint_id', None) is not None:
             return True
         closing = float(getattr(self, 'left_gripper_target', self.left_gripper_open or 1.0))
-        if closing > float(self.handle_grasp_assist_close_threshold):
+        if closing < float(self.handle_grasp_assist_close_threshold):
             return False
         contacts = p.getContactPoints(bodyA=self.urL, bodyB=grasp_body)
         if not contacts:
@@ -883,7 +1065,7 @@ class DualUR5EEGuiIK:
             return False
         closing = float(getattr(self, 'left_gripper_target', self.left_gripper_open or 1.0))
         if getattr(self, 'handle_grasp_assist_constraint_id', None) is not None:
-            if closing >= float(self.handle_grasp_assist_release_threshold):
+            if closing <= float(self.handle_grasp_assist_release_threshold):
                 self._release_handle_grasp_assist()
                 return False
             return True
@@ -1202,7 +1384,7 @@ class DualUR5EEGuiIK:
     def border_indices_from_verts(self, verts, edge_band=0):
         """
         verts: p.getMeshData(...)[1]  ([(x,y,z), ...])
-        edge_band: 0이면 가장 바깥 1줄, 1이면 2줄 ...
+        edge_band: 0?대㈃ 媛??諛붽묑 1以? 1?대㈃ 2以?...
         return: border_indices(list[int]), N_grid(or None)
         """
         numv = len(verts)
@@ -1237,7 +1419,7 @@ class DualUR5EEGuiIK:
     
     def spawn_mesh_grid(self,
         visual_mesh_path,
-        collision_mesh_path,   # ✅ convex hull obj
+        collision_mesh_path,   # ??convex hull obj
         mesh_scale=0.003,
         mass=0.001,
         xs=(0.43, 0.50, 0.57),
@@ -1303,8 +1485,8 @@ class DualUR5EEGuiIK:
         dyn_kwargs=None,
     ):
         """
-        동일 URDF 구체를 격자 형태로 생성하고, 동역학 파라미터를 일괄 적용.
-        반환: sphere_ids(list)
+        ?숈씪 URDF 援ъ껜瑜?寃⑹옄 ?뺥깭濡??앹꽦?섍퀬, ?숈뿭???뚮씪誘명꽣瑜??쇨큵 ?곸슜.
+        諛섑솚: sphere_ids(list)
         """
         if quat is None:
             quat = p.getQuaternionFromEuler([0, 0, 0])
@@ -1346,7 +1528,7 @@ class DualUR5EEGuiIK:
         vt_b = vt[bt][:,:2]
     
         min_d = 1e9
-        step = max(len(vt_b)//200, 1)  # 너무 많으면 샘플링 (최대 200개 정도)
+        step = max(len(vt_b)//200, 1)  # ?덈Т 留롮쑝硫??섑뵆留?(理쒕? 200媛??뺣룄)
         for pt in vt_b[::step]:
             d = vb_b - pt
             dd = np.min(np.sum(d*d, axis=1))
@@ -1469,6 +1651,17 @@ class DualUR5EEGuiIK:
         target[1] += float(side_offset)
         target[2] += float(clearance)
         return target
+
+
+    def get_handle_grasp_target(self):
+        grasp_body = self.handle_proxy_id if getattr(self, 'handle_proxy_id', None) is not None else self.handle_id
+        if grasp_body is None:
+            return None, None, None
+        handle_pos, _ = p.getBasePositionAndOrientation(grasp_body)
+        target = np.array(handle_pos, dtype=np.float32) + np.array(self.handle_grasp_pose_offset, dtype=np.float32)
+        rpy = np.array(self.handle_grasp_pose_rpy, dtype=np.float32)
+        opening = float(self.handle_grasp_opening)
+        return target, rpy, opening
 
     def _update_sack_debug(self, force=False):
         if not getattr(self, "enable_sack_debug", True):
@@ -1604,15 +1797,15 @@ class DualUR5EEGuiIK:
 
     def _get_gripper_extreme_points(self, rid, joint6_idx, fallback_link_idx):
         """
-        joint6 기준으로 그리퍼 후보점에서
-        - 가장 먼 2점(far1, far2)
-        - 가장 가까운 1점(near)
-        을 반환.
+        joint6 湲곗??쇰줈 洹몃━???꾨낫?먯뿉??
+        - 媛??癒?2??far1, far2)
+        - 媛??媛源뚯슫 1??near)
+        ??諛섑솚.
 
         NOTE:
-        - 이전 구현은 end-slice/PCA를 쓰면서 축 추정 오차가 누적될 수 있었음.
-        - 여기서는 요청대로 "거리 기준"을 직접 적용.
-        - 후보 링크는 가능하면 plate_link(실제 그리퍼 본체)를 우선 사용.
+        - ?댁쟾 援ы쁽? end-slice/PCA瑜??곕㈃??異?異붿젙 ?ㅼ감媛 ?꾩쟻?????덉뿀??
+        - ?ш린?쒕뒗 ?붿껌?濡?"嫄곕━ 湲곗?"??吏곸젒 ?곸슜.
+        - ?꾨낫 留곹겕??媛?ν븯硫?plate_link(?ㅼ젣 洹몃━??蹂몄껜)瑜??곗꽑 ?ъ슜.
         """
         joint6_pos = np.array(
             p.getLinkState(rid, joint6_idx, computeForwardKinematics=True)[4],
@@ -1711,11 +1904,14 @@ class DualUR5EEGuiIK:
     
         contacts = p.getContactPoints(bodyA=robotA, bodyB=robotB)
         if len(contacts) > 0:
-            return True, 0.0, contacts  # 충돌
+            return True, 0.0, contacts  # 異⑸룎
     
         near = p.getClosestPoints(bodyA=robotA, bodyB=robotB, distance=safety_dist)
         if len(near) > 0:
             min_d = min([pt[8] for pt in near])  # pt[8] = contact distance
-            return False, float(min_d), near     # 충돌은 아니지만 위험
+            return False, float(min_d), near     # 異⑸룎? ?꾨땲吏留??꾪뿕
 
         return False, float("inf"), []
+
+
+
