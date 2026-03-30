@@ -1,0 +1,159 @@
+<mujoco model="dual_2f_scoop_0330">
+  <compiler angle="radian" coordinate="local" meshdir="object" inertiafromgeom="true"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="RK4" iterations="80" tolerance="1e-8"/>
+  <size njmax="4000" nconmax="2000"/>
+
+  <asset>
+    <mesh name="sack_mesh" file="sack9.obj" scale="0.07 0.07 0.07"/>
+  </asset>
+
+  <default>
+    <joint armature="0.03" frictionloss="0.02"/>
+    <geom condim="4" friction="1.0 0.05 0.01" margin="0.002"/>
+    <position kp="220" ctrllimited="true" forcelimited="true" forcerange="-220 220"/>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 2.2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="ground" type="plane" size="2 2 0.1" rgba="0.92 0.92 0.92 1"/>
+    <camera name="overview" pos="1.35 0 0.95" xyaxes="0 1 0 -0.45 0 0.89"/>
+
+
+    <body name="left_base" pos="0.1 -0.42 0.0">
+      <geom type="cylinder" size="0.060 0.050" rgba="0.18 0.18 0.18 1"/>
+      <body name="left_link1" pos="0 0 0.090">
+        <joint name="left_j1" type="hinge" axis="0 0 1" range="-3.14 3.14" damping="6"/>
+        <geom type="capsule" fromto="0 0 0 0 0 0.120" size="0.050" rgba="0.70 0.70 0.74 1"/>
+        <body name="left_link2" pos="0 0 0.120">
+          <joint name="left_j2" type="hinge" axis="0 1 0" range="-2.4 2.4" damping="6"/>
+          <geom type="capsule" fromto="0 0 0 0.280 0 0" size="0.045" rgba="0.70 0.70 0.74 1"/>
+          <body name="left_link3" pos="0.280 0 0">
+            <joint name="left_j3" type="hinge" axis="0 1 0" range="-2.8 2.8" damping="5"/>
+            <geom type="capsule" fromto="0 0 0 0.260 0 0" size="0.040" rgba="0.70 0.70 0.74 1"/>
+            <body name="left_link4" pos="0.260 0 0">
+              <joint name="left_j4" type="hinge" axis="0 1 0" range="-3.14 3.14" damping="4"/>
+              <geom type="capsule" fromto="0 0 0 0.180 0 0" size="0.032" rgba="0.70 0.70 0.74 1"/>
+              <body name="left_link5" pos="0.180 0 0">
+                <joint name="left_j5" type="hinge" axis="0 0 1" range="-3.14 3.14" damping="3"/>
+                <geom type="capsule" fromto="0 0 0 0.120 0 0" size="0.026" rgba="0.70 0.70 0.74 1"/>
+                <body name="left_link6" pos="0.120 0 0">
+                  <joint name="left_j6" type="hinge" axis="0 1 0" range="-3.14 3.14" damping="2"/>
+                  <geom type="capsule" fromto="0 0 0 0.140 0 0" size="0.022" rgba="0.70 0.70 0.74 1"/>
+
+                  <body name="left_tool" pos="0.14 0 0">
+                    <geom type="box" size="0.020 0.020 0.030" rgba="0.15 0.15 0.15 1"/>
+                    <body name="left_finger_l_body" pos="0 0 0.065">
+                      <joint name="left_finger_l" type="slide" axis="0 1 0" limited="true" range="0.010 0.040" damping="6"/>
+                      <geom type="box" pos="0 0.018 0" size="0.010 0.006 0.032" rgba="0.10 0.10 0.10 1" friction="1.5 0.05 0.01"/>
+                    </body>
+                    <body name="left_finger_r_body" pos="0 0 0.065">
+                      <joint name="left_finger_r" type="slide" axis="0 -1 0" limited="true" range="0.010 0.040" damping="6"/>
+                      <geom type="box" pos="0 -0.018 0" size="0.010 0.006 0.032" rgba="0.10 0.10 0.10 1" friction="1.5 0.05 0.01"/>
+                    </body>
+                    <site name="left_grip_site" pos="0 0 0.065" size="0.006" rgba="1 0 0 1"/>
+                  </body>
+
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+
+    <body name="right_base" pos="0.1 0.42 0.0">
+      <geom type="cylinder" size="0.060 0.050" rgba="0.18 0.18 0.18 1"/>
+      <body name="right_link1" pos="0 0 0.090">
+        <joint name="right_j1" type="hinge" axis="0 0 1" range="-3.14 3.14" damping="6"/>
+        <geom type="capsule" fromto="0 0 0 0 0 0.120" size="0.050" rgba="0.74 0.70 0.70 1"/>
+        <body name="right_link2" pos="0 0 0.120">
+          <joint name="right_j2" type="hinge" axis="0 1 0" range="-2.4 2.4" damping="6"/>
+          <geom type="capsule" fromto="0 0 0 0.280 0 0" size="0.045" rgba="0.74 0.70 0.70 1"/>
+          <body name="right_link3" pos="0.280 0 0">
+            <joint name="right_j3" type="hinge" axis="0 1 0" range="-2.8 2.8" damping="5"/>
+            <geom type="capsule" fromto="0 0 0 0.260 0 0" size="0.040" rgba="0.74 0.70 0.70 1"/>
+            <body name="right_link4" pos="0.260 0 0">
+              <joint name="right_j4" type="hinge" axis="0 1 0" range="-3.14 3.14" damping="4"/>
+              <geom type="capsule" fromto="0 0 0 0.180 0 0" size="0.032" rgba="0.74 0.70 0.70 1"/>
+              <body name="right_link5" pos="0.180 0 0">
+                <joint name="right_j5" type="hinge" axis="0 0 1" range="-3.14 3.14" damping="3"/>
+                <geom type="capsule" fromto="0 0 0 0.120 0 0" size="0.026" rgba="0.74 0.70 0.70 1"/>
+                <body name="right_link6" pos="0.120 0 0">
+                  <joint name="right_j6" type="hinge" axis="0 1 0" range="-3.14 3.14" damping="2"/>
+                  <geom type="capsule" fromto="0 0 0 0.140 0 0" size="0.022" rgba="0.74 0.70 0.70 1"/>
+
+                  <body name="right_scoop" pos="0.16 0 0">
+                    <geom type="box" pos="0.070 0 0" size="0.070 0.080 0.004" rgba="0.30 0.35 0.42 1" friction="1.2 0.05 0.01"/>
+                    <geom type="box" pos="0.130 0 0.025" size="0.004 0.080 0.025" rgba="0.25 0.30 0.36 1" friction="1.2 0.05 0.01"/>
+                    <geom type="box" pos="0.070 0.076 0.015" size="0.060 0.004 0.015" rgba="0.25 0.30 0.36 1" friction="1.2 0.05 0.01"/>
+                    <geom type="box" pos="0.070 -0.076 0.015" size="0.060 0.004 0.015" rgba="0.25 0.30 0.36 1" friction="1.2 0.05 0.01"/>
+                    <site name="right_scoop_site" pos="0.050 0 0.028" size="0.006" rgba="0 0 1 1"/>
+                  </body>
+
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+
+    <body name="sack" pos="0.72 0 0.135">
+      <freejoint name="sack_free"/>
+      <geom name="sack_visual" type="mesh" mesh="sack_mesh" rgba="0.90 0.85 0.70 0.70" contype="0" conaffinity="0"/>
+      <geom name="sack_bottom" type="box" pos="0 0 -0.055" size="0.060 0.090 0.005" mass="0.10" rgba="0.75 0.67 0.52 0.20"/>
+      <geom name="sack_wall_l" type="box" pos="0 0.085 0.010" size="0.060 0.005 0.070" mass="0.08" rgba="0.75 0.67 0.52 0.18"/>
+      <geom name="sack_wall_r" type="box" pos="0 -0.085 0.010" size="0.060 0.005 0.070" mass="0.08" rgba="0.75 0.67 0.52 0.18"/>
+      <geom name="sack_wall_f" type="box" pos="0.055 0 0.010" size="0.005 0.090 0.070" mass="0.08" rgba="0.75 0.67 0.52 0.18"/>
+      <geom name="sack_wall_b" type="box" pos="-0.055 0 0.010" size="0.005 0.090 0.070" mass="0.08" rgba="0.75 0.67 0.52 0.18"/>
+      <body name="sack_handle" pos="-0.010 0 0.115">
+        <geom type="box" size="0.010 0.050 0.010" mass="0.03" rgba="0.52 0.38 0.22 1" friction="1.8 0.05 0.02"/>
+        <site name="handle_grasp_site" pos="0 0 0" size="0.008" rgba="1 0 0 1"/>
+      </body>
+
+      <body name="payload0" pos="-0.010 -0.020 0.000">
+        <joint name="payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.025 0.025" damping="14"/>
+        <joint name="payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.040 0.040" damping="14"/>
+        <joint name="payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.050" damping="16"/>
+        <geom type="sphere" size="0.016" mass="0.90" rgba="0.62 0.22 0.20 1" contype="0" conaffinity="0"/>
+      </body>
+      <body name="payload1" pos="0.012 0.018 0.010">
+        <joint name="payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.025 0.025" damping="14"/>
+        <joint name="payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.040 0.040" damping="14"/>
+        <joint name="payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.050" damping="16"/>
+        <geom type="sphere" size="0.016" mass="0.90" rgba="0.62 0.22 0.20 1" contype="0" conaffinity="0"/>
+      </body>
+      <body name="payload2" pos="0.000 0.000 0.022">
+        <joint name="payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.025 0.025" damping="14"/>
+        <joint name="payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.040 0.040" damping="14"/>
+        <joint name="payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.020 0.045" damping="16"/>
+        <geom type="sphere" size="0.016" mass="0.90" rgba="0.62 0.22 0.20 1" contype="0" conaffinity="0"/>
+      </body>
+      <body name="payload3" pos="-0.015 0.020 -0.005">
+        <joint name="payload3_x" type="slide" axis="1 0 0" limited="true" range="-0.025 0.025" damping="14"/>
+        <joint name="payload3_y" type="slide" axis="0 1 0" limited="true" range="-0.040 0.040" damping="14"/>
+        <joint name="payload3_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.050" damping="16"/>
+        <geom type="sphere" size="0.016" mass="0.90" rgba="0.62 0.22 0.20 1" contype="0" conaffinity="0"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="act_left_j1" joint="left_j1" ctrlrange="-3.14 3.14" forcerange="-220 220"/>
+    <position name="act_left_j2" joint="left_j2" ctrlrange="-2.4 2.4" forcerange="-220 220"/>
+    <position name="act_left_j3" joint="left_j3" ctrlrange="-2.8 2.8" forcerange="-220 220"/>
+    <position name="act_left_j4" joint="left_j4" ctrlrange="-3.14 3.14" forcerange="-160 160"/>
+    <position name="act_left_j5" joint="left_j5" ctrlrange="-3.14 3.14" forcerange="-120 120"/>
+    <position name="act_left_j6" joint="left_j6" ctrlrange="-3.14 3.14" forcerange="-120 120"/>
+    <position name="act_right_j1" joint="right_j1" ctrlrange="-3.14 3.14" forcerange="-220 220"/>
+    <position name="act_right_j2" joint="right_j2" ctrlrange="-2.4 2.4" forcerange="-220 220"/>
+    <position name="act_right_j3" joint="right_j3" ctrlrange="-2.8 2.8" forcerange="-220 220"/>
+    <position name="act_right_j4" joint="right_j4" ctrlrange="-3.14 3.14" forcerange="-160 160"/>
+    <position name="act_right_j5" joint="right_j5" ctrlrange="-3.14 3.14" forcerange="-120 120"/>
+    <position name="act_right_j6" joint="right_j6" ctrlrange="-3.14 3.14" forcerange="-120 120"/>
+    <position name="act_left_finger_l" joint="left_finger_l" ctrlrange="0.010 0.040" kp="1400" forcerange="-120 120"/>
+    <position name="act_left_finger_r" joint="left_finger_r" ctrlrange="0.010 0.040" kp="1400" forcerange="-120 120"/>
+  </actuator>
+</mujoco>
