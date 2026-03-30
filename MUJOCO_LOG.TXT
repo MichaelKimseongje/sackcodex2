@@ -1,0 +1,9 @@
+Mon Mar 30 13:51:27 2026
+ERROR: mjv_makeSceneState: mjvSceneState buffer is not fully used
+
+Mon Mar 30 15:22:54 2026
+WARNING: Nan, Inf or huge value in QACC at DOF 1. The simulation is unstable. Time = 59.9700.
+
+Mon Mar 30 15:55:06 2026
+WARNING: Nan, Inf or huge value in QACC at DOF 9. The simulation is unstable. Time = 6.9280.
+
