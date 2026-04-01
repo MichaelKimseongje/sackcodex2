@@ -1,0 +1,91 @@
+{
+  "episode_id": "top_grasp_flat_scoop_drag_seed7",
+  "seed": 7,
+  "baseline": "top_grasp_flat_scoop_drag",
+  "target_name": "sack_0",
+  "target_variant": "side_bulged_unstable",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\top_grasp_flat_scoop_drag_seed7.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.49679502139274484,
+        -0.06029634938935296,
+        0.115
+      ],
+      "yaw": 0.2254532822519444,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": true
+    },
+    {
+      "name": "sack_1",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.6629873197369713,
+        -0.1691473604016915,
+        0.115
+      ],
+      "yaw": -2.2352112333523753,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_2",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.7400149768938822,
+        -0.036357256340914544,
+        0.115
+      ],
+      "yaw": -1.258101063318555,
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_3",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.5525286078728846,
+        0.14732136535856977,
+        0.115
+      ],
+      "yaw": -1.0045408248268597,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_4",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.701048014589999,
+        0.18017431253027016,
+        0.115
+      ],
+      "yaw": -0.7512094655767596,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.1298139644274836,
+    "support_success": false,
+    "scoop_insertion_depth": 0.0,
+    "micro_lift_stability": 0.1497882647495202,
+    "slip_distance": 0.00017242622690451814,
+    "tilt_deg": 90.0047579525755,
+    "dropped": false,
+    "contact_count": 25,
+    "failure_tags": [
+      "no_support_contact",
+      "shallow_insertion",
+      "unstable_micro_lift",
+      "tilt"
+    ]
+  }
+}

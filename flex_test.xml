@@ -1,0 +1,11 @@
+﻿<mujoco model="flex_test">
+  <compiler angle="radian" coordinate="local" meshdir="object"/>
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+  <worldbody>
+    <geom type="plane" size="2 2 0.1"/>
+    <body name="bag" pos="0 0 0.5">
+      <freejoint/>
+      <flexcomp name="bagflex" type="mesh" file="sack9.obj" mass="1" radius="0.003" dim="2"/>
+    </body>
+  </worldbody>
+</mujoco>

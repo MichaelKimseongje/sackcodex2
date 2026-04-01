@@ -1,0 +1,99 @@
+{
+  "episode_id": "fixed_2f_scoop_pose_seed11",
+  "seed": 11,
+  "baseline": "fixed_2f_scoop_pose",
+  "target_name": "sack_2",
+  "target_variant": "side_bulged_unstable",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\fixed_2f_scoop_pose_seed11.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.5578712844271708,
+        0.08004845194000412,
+        0.115
+      ],
+      "yaw": -1.948403000675756,
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_1",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.5690519064164454,
+        -0.12015751305191735,
+        0.115
+      ],
+      "yaw": -0.3355651179000123,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_2",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.7396779120394641,
+        0.13481070186892308,
+        0.115
+      ],
+      "yaw": 0.5996452512666544,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": true
+    },
+    {
+      "name": "sack_3",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.750386192221165,
+        -0.11276545131352708,
+        0.115
+      ],
+      "yaw": 2.8779651729405726,
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_4",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.6352055983239314,
+        0.18791069272170202,
+        0.19
+      ],
+      "yaw": 2.9114982934172637,
+      "exposed_face": "top",
+      "stack_level": 1,
+      "is_target": false
+    },
+    {
+      "name": "sack_5",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.4563574382300487,
+        -0.09820381839894403,
+        0.19
+      ],
+      "yaw": 0.1675311107402706,
+      "exposed_face": "top",
+      "stack_level": 1,
+      "is_target": false
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.49700223231943447,
+    "support_success": true,
+    "scoop_insertion_depth": 0.18,
+    "micro_lift_stability": 0.4222175332872412,
+    "slip_distance": 0.011635848909544392,
+    "tilt_deg": 9.71065675302106,
+    "dropped": false,
+    "contact_count": 26,
+    "failure_tags": []
+  }
+}
