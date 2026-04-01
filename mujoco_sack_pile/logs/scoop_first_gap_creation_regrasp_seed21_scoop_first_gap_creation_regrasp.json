@@ -1,0 +1,76 @@
+{
+  "episode_id": "scoop_first_gap_creation_regrasp_seed21",
+  "seed": 21,
+  "baseline": "scoop_first_gap_creation_regrasp",
+  "target_name": "sack_1",
+  "target_variant": "side_bulged_unstable",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\scoop_first_gap_creation_regrasp_seed21.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.7531437319148662,
+        -0.017585043942788852,
+        0.115
+      ],
+      "yaw": -1.7843344767628433,
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_1",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.6111867638442041,
+        0.031248610269137344,
+        0.115
+      ],
+      "yaw": -1.6823057981440406,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": true
+    },
+    {
+      "name": "sack_2",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.6341722486815304,
+        0.19905714534135718,
+        0.115
+      ],
+      "yaw": 2.3564428073943366,
+      "exposed_face": "top",
+      "stack_level": 0,
+      "is_target": false
+    },
+    {
+      "name": "sack_3",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.4331828341616804,
+        -0.027455821957993152,
+        0.115
+      ],
+      "yaw": 1.514384511833728,
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.36522262680676976,
+    "support_success": false,
+    "scoop_insertion_depth": 0.05268788484434499,
+    "micro_lift_stability": 0.3842675387104758,
+    "slip_distance": 0.05159676862328011,
+    "tilt_deg": 0.12365005104240248,
+    "dropped": false,
+    "contact_count": 25,
+    "failure_tags": [
+      "no_support_contact",
+      "unstable_micro_lift"
+    ]
+  }
+}

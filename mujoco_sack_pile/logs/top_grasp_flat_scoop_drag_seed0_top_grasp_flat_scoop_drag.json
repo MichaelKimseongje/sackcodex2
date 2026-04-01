@@ -1,0 +1,161 @@
+{
+  "episode_id": "top_grasp_flat_scoop_drag_seed0",
+  "seed": 0,
+  "baseline": "top_grasp_flat_scoop_drag",
+  "target_name": "sack_5",
+  "target_variant": "side_bulged_unstable",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\top_grasp_flat_scoop_drag_seed0.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.6964128754239999,
+        0.005422250516693075,
+        0.11714802412351243
+      ],
+      "euler": [
+        0.05216297911111556,
+        -0.014640713991476761,
+        1.783159124821581
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.07690264137413436,
+      "fill_ratio": 0.8116251771640227,
+      "top_collapse": 0.01708112885195335,
+      "side_bulge": 0.021065615981443464,
+      "flattening": 0.9731433190690929
+    },
+    {
+      "name": "sack_1",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.49014496953157394,
+        0.09580112671649975,
+        0.11916428146358139
+      ],
+      "euler": [
+        0.15650433823213517,
+        0.042018953878675686,
+        -2.508868302639403
+      ],
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.0747367018789268,
+      "fill_ratio": 1.0142053754423577,
+      "top_collapse": 0.00773285094216607,
+      "side_bulge": 0.00477009776552717,
+      "flattening": 0.8729378469097486
+    },
+    {
+      "name": "sack_2",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.7409309778184149,
+        0.12133562509933514,
+        0.12984189835211696
+      ],
+      "euler": [
+        -0.2849829500805691,
+        0.13279763209906797,
+        -1.048442853669676
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack2.obj",
+      "mesh_scale": 0.07185198552627156,
+      "fill_ratio": 0.5198984302944708,
+      "top_collapse": 0.0381744173205289,
+      "side_bulge": 0.0042170389621418655,
+      "flattening": 0.9520371881532035
+    },
+    {
+      "name": "sack_3",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.5951872937473132,
+        -0.059092419120799614,
+        0.12469978166968886
+      ],
+      "euler": [
+        0.14917459664683197,
+        0.10199305500076317,
+        -0.1474601261807389
+      ],
+      "exposed_face": "top",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack10.obj",
+      "mesh_scale": 0.07050479437527188,
+      "fill_ratio": 0.7384630831496495,
+      "top_collapse": 0.038314382350818174,
+      "side_bulge": 0.010424602231401825,
+      "flattening": 0.9513679789854553
+    },
+    {
+      "name": "sack_4",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.612033513232287,
+        -0.18193963513837333,
+        0.10851402879625553
+      ],
+      "euler": [
+        0.2721274865182391,
+        -0.14425333199399382,
+        -1.7563982475289295
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.07232340518521553,
+      "fill_ratio": 0.6126655390023714,
+      "top_collapse": 0.009006075202160962,
+      "side_bulge": 0.016049018844772254,
+      "flattening": 0.9606824903009668
+    },
+    {
+      "name": "sack_5",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.6366307694723704,
+        0.11506643111172513,
+        0.15538041584702936
+      ],
+      "euler": [
+        -0.39814879684889065,
+        0.12432558090210596,
+        0.2779392874507698
+      ],
+      "exposed_face": "top",
+      "stack_level": 1,
+      "is_target": true,
+      "mesh_file": "sack6Apply.obj",
+      "mesh_scale": 0.07139602290989253,
+      "fill_ratio": 0.7670157783348706,
+      "top_collapse": 0.012360686479532562,
+      "side_bulge": 0.014854594149074786,
+      "flattening": 0.8958104750268597
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.8211000001631491,
+    "support_success": false,
+    "scoop_insertion_depth": 0.18,
+    "micro_lift_stability": 0.3090664785888985,
+    "slip_distance": 0.0009378078180634319,
+    "tilt_deg": 13.97612616385222,
+    "dropped": false,
+    "contact_count": 30,
+    "failure_tags": [
+      "unstable_micro_lift"
+    ]
+  }
+}

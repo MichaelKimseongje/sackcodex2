@@ -1,0 +1,162 @@
+<mujoco model="deformable_loadcheck_deformable_pile">
+  <compiler angle="radian" coordinate="local" meshdir="D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object"/>
+  <option gravity="0 0 -9.81" timestep="0.002" iterations="120" tolerance="1e-10"/>
+  <size memory="1024M" nconmax="20000"/>
+
+  <visual>
+    <global azimuth="130" elevation="-22"/>
+    <headlight ambient="0.35 0.35 0.35" diffuse="0.80 0.80 0.80" specular="0.15 0.15 0.15"/>
+  </visual>
+
+  <worldbody>
+    <light name="key" pos="0.9 0.0 1.8" dir="-0.2 0 -1" directional="true"/>
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.93 0.93 0.93 1"/>
+    <geom name="work_pad" type="box" pos="0.62 0 0.010" size="0.32 0.32 0.010" rgba="0.60 0.61 0.62 1" friction="1.5 0.05 0.01"/>
+    <camera name="overview" pos="1.26 0.00 0.96" xyaxes="0 1 0 -0.48 0 0.88"/>
+
+    <body name="dsack_0" pos="0.5199 -0.1072 0.2250" euler="0.1213 0.1584 2.5687">
+      <freejoint name="dsack_0_free"/>
+      <flexcomp name="dsack_0_flex" type="mesh" file="sack8.obj" dim="2" mass="0.7203" radius="0.00520">
+        <edge damping="0.18"/>
+        <contact condim="4" friction="1.4 0.05 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <elasticity young="2.5e4" poisson="0.28"/>
+      </flexcomp>
+      
+      <body name="dsack_0_payload0" pos="0.000 0.000 0.010">
+        <joint name="dsack_0_payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.018" mass="0.1152" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_0_payload1" pos="0.022 0.000 -0.012">
+        <joint name="dsack_0_payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.016" mass="0.1008" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_0_payload2" pos="-0.020 0.010 0.000">
+        <joint name="dsack_0_payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_0_payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.015" mass="0.0864" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <site name="dsack_0_site" pos="0 0 0" size="0.006" rgba="0.840 0.740 0.500 1"/>
+    </body>
+
+    <body name="dsack_1" pos="0.5556 0.1067 0.1986" euler="-0.5241 0.2023 2.3125">
+      <freejoint name="dsack_1_free"/>
+      <flexcomp name="dsack_1_flex" type="mesh" file="sack10.obj" dim="2" mass="0.4538" radius="0.00438">
+        <edge damping="0.18"/>
+        <contact condim="4" friction="1.4 0.05 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <elasticity young="2.5e4" poisson="0.28"/>
+      </flexcomp>
+      
+      <body name="dsack_1_payload0" pos="0.000 0.000 0.010">
+        <joint name="dsack_1_payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.018" mass="0.0726" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_1_payload1" pos="0.022 0.000 -0.012">
+        <joint name="dsack_1_payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.016" mass="0.0635" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_1_payload2" pos="-0.020 0.010 0.000">
+        <joint name="dsack_1_payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_1_payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.015" mass="0.0545" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <site name="dsack_1_site" pos="0 0 0" size="0.006" rgba="0.820 0.660 0.440 1"/>
+    </body>
+
+    <body name="dsack_2" pos="0.6429 -0.1868 0.2057" euler="-0.1686 0.4322 -0.4591">
+      <freejoint name="dsack_2_free"/>
+      <flexcomp name="dsack_2_flex" type="mesh" file="sack9.obj" dim="2" mass="0.6700" radius="0.00534">
+        <edge damping="0.18"/>
+        <contact condim="4" friction="1.4 0.05 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <elasticity young="2.5e4" poisson="0.28"/>
+      </flexcomp>
+      
+      <body name="dsack_2_payload0" pos="0.000 0.000 0.010">
+        <joint name="dsack_2_payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.018" mass="0.1072" rgba="0.760 0.600 0.400 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_2_payload1" pos="0.022 0.000 -0.012">
+        <joint name="dsack_2_payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.016" mass="0.0938" rgba="0.760 0.600 0.400 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_2_payload2" pos="-0.020 0.010 0.000">
+        <joint name="dsack_2_payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_2_payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.015" mass="0.0804" rgba="0.760 0.600 0.400 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <site name="dsack_2_site" pos="0 0 0" size="0.006" rgba="0.760 0.600 0.400 1"/>
+    </body>
+
+    <body name="dsack_3" pos="0.7029 0.0847 0.1881" euler="-0.1712 -0.2236 0.5345">
+      <freejoint name="dsack_3_free"/>
+      <flexcomp name="dsack_3_flex" type="mesh" file="sack10.obj" dim="2" mass="0.5342" radius="0.00452">
+        <edge damping="0.18"/>
+        <contact condim="4" friction="1.4 0.05 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <elasticity young="2.5e4" poisson="0.28"/>
+      </flexcomp>
+      
+      <body name="dsack_3_payload0" pos="0.000 0.000 0.010">
+        <joint name="dsack_3_payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.018" mass="0.0855" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_3_payload1" pos="0.022 0.000 -0.012">
+        <joint name="dsack_3_payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.016" mass="0.0748" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_3_payload2" pos="-0.020 0.010 0.000">
+        <joint name="dsack_3_payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_3_payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.015" mass="0.0641" rgba="0.820 0.660 0.440 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <site name="dsack_3_site" pos="0 0 0" size="0.006" rgba="0.820 0.660 0.440 1"/>
+    </body>
+
+    <body name="dsack_4" pos="0.4262 0.0110 0.2503" euler="0.5410 0.6969 2.5428">
+      <freejoint name="dsack_4_free"/>
+      <flexcomp name="dsack_4_flex" type="mesh" file="sack9.obj" dim="2" mass="0.8467" radius="0.00483">
+        <edge damping="0.18"/>
+        <contact condim="4" friction="1.4 0.05 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <elasticity young="2.5e4" poisson="0.28"/>
+      </flexcomp>
+      
+      <body name="dsack_4_payload0" pos="0.000 0.000 0.010">
+        <joint name="dsack_4_payload0_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload0_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload0_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.018" mass="0.1355" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_4_payload1" pos="0.022 0.000 -0.012">
+        <joint name="dsack_4_payload1_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload1_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload1_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.016" mass="0.1185" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <body name="dsack_4_payload2" pos="-0.020 0.010 0.000">
+        <joint name="dsack_4_payload2_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload2_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="4"/>
+        <joint name="dsack_4_payload2_z" type="slide" axis="0 0 1" limited="true" range="-0.030 0.030" damping="4"/>
+        <geom type="sphere" size="0.015" mass="0.1016" rgba="0.840 0.740 0.500 0.10" friction="0.9 0.03 0.01"/>
+      </body>
+      <site name="dsack_4_site" pos="0 0 0" size="0.006" rgba="0.840 0.740 0.500 1"/>
+    </body>
+  </worldbody>
+</mujoco>
