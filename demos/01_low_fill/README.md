@@ -1,8 +1,34 @@
 # 01_low_fill
 
+## Dual UR5 GUI xyz control
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_gui.py
+```
+
+- Joint target: 양쪽 UR5 관절 목표각을 degree 단위로 조절합니다.
+- End effector xyz: 왼쪽은 `left_gripper_pinch`, 오른쪽은 `right_scoop_tip_site`의 world `x, y, z` 목표를 m 단위로 입력하고 `Apply xyz IK`로 이동합니다.
+- EE +/- button: `xyz step [m]`만큼 손끝 위치 목표를 조금씩 이동합니다.
+- 2F gripper: `pad gap [mm]` 기준으로 조작하며, `0 mm`이면 두 finger pad가 닫히는 상태입니다.
+- Pose JSON: joint target degree, EE target xyz, gripper gap을 저장/불러옵니다.
+
 ## Dual UR5 keyboard joint control
 
 Dual UR5 viewer에서는 MuJoCo 오른쪽 control bar 슬라이더와 함께 키보드 미세 조정을 사용할 수 있습니다.
+
+별도 GUI 창으로 degree 단위 관절 조작, 자루 위치 표시, pose JSON 저장/불러오기를 하려면 아래를 실행합니다.
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_gui.py
+```
+
+GUI에서는 각 UR5 관절 목표각을 degree로 조절하고, `bag_frame` 및 shell center 위치를 m 단위로 확인할 수 있습니다. 저장한 pose는 기본적으로 `demos/01_low_fill/poses/*.json`에 둘 수 있습니다.
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_gui.py --joint-step-deg 0.5
+```
+
+기존 MuJoCo viewer만 사용할 수도 있습니다.
 
 ```powershell
 & 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py

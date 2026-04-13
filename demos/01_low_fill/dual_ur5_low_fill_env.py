@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import os
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -52,7 +53,7 @@ RIGHT_BASE_POS = np.array([0.0, 0.48, 0.0], dtype=np.float64)
 LEFT_HOME_DEG = np.array([-92.0, -88.0, 96.0, -98.0, -88.0, 0.0], dtype=np.float64)
 RIGHT_HOME_DEG = np.array([-88.0, -88.0, 96.0, -98.0, 88.0, 0.0], dtype=np.float64)
 
-LOW_FILL_WORLD_POS = np.array([0.70, 0.0, BAG_FRAME_POS_Z], dtype=np.float64)
+LOW_FILL_WORLD_POS = np.array([0.40, 0.0, BAG_FRAME_POS_Z], dtype=np.float64)
 JOINT_STEP_DEG_DEFAULT = 2.0
 GRIPPER_STEP_DEFAULT = 0.002
 
@@ -108,7 +109,8 @@ class DualUR5LowFillEnv:
         ]
         self.left_finger_actuator_names = ["left_finger_l_act", "left_finger_r_act"]
         self.left_gripper_open = 0.040
-        self.left_gripper_close = 0.012
+        self.left_gripper_close = 0.006
+        self.left_gripper_pad_halfwidth = 0.006
 
         self.write_scene_xml()
         self.model = mujoco.MjModel.from_xml_path(str(self.scene_path))
@@ -181,12 +183,12 @@ class DualUR5LowFillEnv:
         <body name="left_gripper_base" pos="0 0.10 0" quat="-1 1 0 0">
           <geom name="left_gripper_palm" type="box" size="0.022 0.022 0.032" rgba="0.12 0.12 0.12 1"/>
           <body name="left_finger_l_body" pos="0 0 0.067">
-            <joint name="left_finger_l" type="slide" axis="0 1 0" limited="true" range="0.012 0.040" damping="8"/>
-            <geom name="left_finger_l_pad" type="box" pos="0 0.018 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
+            <joint name="left_finger_l" type="slide" axis="0 1 0" limited="true" range="0.006 0.040" damping="8"/>
+            <geom name="left_finger_l_pad" type="box" pos="0 0 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
           </body>
           <body name="left_finger_r_body" pos="0 0 0.067">
-            <joint name="left_finger_r" type="slide" axis="0 -1 0" limited="true" range="0.012 0.040" damping="8"/>
-            <geom name="left_finger_r_pad" type="box" pos="0 -0.018 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
+            <joint name="left_finger_r" type="slide" axis="0 -1 0" limited="true" range="0.006 0.040" damping="8"/>
+            <geom name="left_finger_r_pad" type="box" pos="0 0 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
           </body>
           <site name="left_gripper_pinch" pos="0 0 0.067" size="0.006" rgba="1 0 0 1"/>
         </body>
@@ -201,18 +203,62 @@ class DualUR5LowFillEnv:
 
         scoop = ET.fromstring(
             """
-        <body name="right_scoop_tool" pos="0 0.10 0.05" euler="-90 90 0">
-          <geom name="right_scoop_plate" type="box" pos="0 -0.020 0" size="0.055 0.078 0.002" mass="0.05" rgba="0.30 0.30 0.30 1" friction="1.6 0.05 0.01"/>
-          <geom name="right_scoop_lip" type="box" pos="0.053 -0.020 0.013" size="0.003 0.078 0.012" mass="0.015" rgba="0.25 0.25 0.25 1" friction="1.6 0.05 0.01"/>
-          <geom name="right_scoop_left_rail" type="box" pos="0 0.057 0.014" size="0.055 0.003 0.012" mass="0.012" rgba="0.25 0.25 0.25 1"/>
-          <geom name="right_scoop_right_rail" type="box" pos="0 -0.097 0.014" size="0.055 0.003 0.012" mass="0.012" rgba="0.25 0.25 0.25 1"/>
-          <geom name="right_scoop_ramp" type="box" pos="0 -0.105 -0.001" euler="0.35 0 0" size="0.055 0.012 0.0015" mass="0.008" rgba="0.30 0.30 0.30 1" friction="1.6 0.05 0.01"/>
-          <site name="right_scoop_site" pos="0 -0.090 0.006" size="0.006" rgba="0 0 1 1"/>
-          <site name="right_scoop_tip_site" pos="0.053 -0.105 0.002" size="0.005" rgba="0 0.7 1 1"/>
+        <body name="right_scoop_tool" pos="0 0.10 0" euler="90 180 0">
+          <geom name="right_scoop_plate" type="box" pos="0 0 0.080" size="0.002 0.055 0.080" mass="0.055" rgba="0.30 0.30 0.30 1" friction="1.6 0.05 0.01"/>
+          <geom name="right_scoop_left_rail" type="box" pos="-0.014 0.055 0.080" size="0.012 0.003 0.080" mass="0.012" rgba="0.25 0.25 0.25 1"/>
+          <geom name="right_scoop_right_rail" type="box" pos="-0.014 -0.055 0.080" size="0.012 0.003 0.080" mass="0.012" rgba="0.25 0.25 0.25 1"/>
+          <site name="right_scoop_site" pos="-0.004 0 0.080" size="0.006" rgba="0 0 1 1"/>
+          <site name="right_scoop_tip_site" pos="-0.004 0 0.160" size="0.005" rgba="0 0.7 1 1"/>
         </body>
         """
         )
         right_wrist.append(scoop)
+
+    def _add_world_origin_axes(self, worldbody: ET.Element) -> None:
+        """원점 기준 x/y/z 좌표축을 collision 없는 시각 요소로 추가한다."""
+        axes = ET.SubElement(worldbody, "body", {"name": "world_origin_axes", "pos": "0 0 0"})
+        axis_radius = "0.012"
+        endpoint_radius = "0.024"
+        axis_group = "0"
+        ET.SubElement(
+            axes,
+            "geom",
+            {"name": "origin_axis_marker", "type": "sphere", "pos": "0 0 0.024", "size": endpoint_radius, "rgba": "1 1 1 1", "contype": "0", "conaffinity": "0", "group": axis_group},
+        )
+        axis_specs = (
+            ("x", "0 0 0.024 0.20 0 0.024", "0.20 0 0.024", "1 0.02 0.02 1"),
+            ("y", "0 0 0.024 0 0.20 0.024", "0 0.20 0.024", "0.02 0.8 0.02 1"),
+            ("z", "0 0 0.024 0 0 0.20", "0 0 0.20", "0.02 0.2 1 1"),
+        )
+        for axis_name, fromto, endpoint_pos, rgba in axis_specs:
+            ET.SubElement(
+                axes,
+                "geom",
+                {
+                    "name": f"origin_axis_{axis_name}",
+                    "type": "capsule",
+                    "fromto": fromto,
+                    "size": axis_radius,
+                    "rgba": rgba,
+                    "contype": "0",
+                    "conaffinity": "0",
+                    "group": axis_group,
+                },
+            )
+            ET.SubElement(
+                axes,
+                "geom",
+                {
+                    "name": f"origin_axis_{axis_name}_end",
+                    "type": "sphere",
+                    "pos": endpoint_pos,
+                    "size": endpoint_radius,
+                    "rgba": rgba,
+                    "contype": "0",
+                    "conaffinity": "0",
+                    "group": axis_group,
+                },
+            )
 
     def _low_fill_body(self) -> ET.Element:
         bag_frame = ET.Element(
@@ -356,6 +402,7 @@ class DualUR5LowFillEnv:
             },
         )
         ET.SubElement(worldbody, "camera", {"name": "overview", "pos": "1.65 0 1.0", "xyaxes": "0 1 0 -0.42 0 0.91"})
+        self._add_world_origin_axes(worldbody)
         worldbody.append(left_body)
         worldbody.append(right_body)
         worldbody.append(self._low_fill_body())
@@ -368,19 +415,21 @@ class DualUR5LowFillEnv:
         ET.SubElement(
             actuator,
             "position",
-            {"name": "left_finger_l_act", "joint": "left_finger_l", "ctrlrange": "0.012 0.040", "kp": "1800", "forcerange": "-200 200"},
+            {"name": "left_finger_l_act", "joint": "left_finger_l", "ctrlrange": "0.006 0.040", "kp": "1800", "forcerange": "-200 200"},
         )
         ET.SubElement(
             actuator,
             "position",
-            {"name": "left_finger_r_act", "joint": "left_finger_r", "ctrlrange": "0.012 0.040", "kp": "1800", "forcerange": "-200 200"},
+            {"name": "left_finger_r_act", "joint": "left_finger_r", "ctrlrange": "0.006 0.040", "kp": "1800", "forcerange": "-200 200"},
         )
 
         ET.indent(root, space="  ")
         return ET.tostring(root, encoding="unicode")
 
     def write_scene_xml(self) -> Path:
-        self.scene_path.write_text(self.scene_xml(), encoding="utf-8")
+        tmp_path = self.scene_path.with_name(f"{self.scene_path.stem}.{os.getpid()}.{id(self)}.tmp")
+        tmp_path.write_text(self.scene_xml(), encoding="utf-8")
+        tmp_path.replace(self.scene_path)
         return self.scene_path
 
     def _joint_qpos_address(self, joint_name: str) -> int:
@@ -388,6 +437,12 @@ class DualUR5LowFillEnv:
         if joint_id < 0:
             raise KeyError(f"joint not found: {joint_name}")
         return int(self.model.jnt_qposadr[joint_id])
+
+    def _joint_dof_address(self, joint_name: str) -> int:
+        joint_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, joint_name)
+        if joint_id < 0:
+            raise KeyError(f"joint not found: {joint_name}")
+        return int(self.model.jnt_dofadr[joint_id])
 
     def _actuator_id(self, actuator_name: str) -> int:
         actuator_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, actuator_name)
@@ -417,10 +472,106 @@ class DualUR5LowFillEnv:
         for actuator_name, value in zip(names, np.deg2rad(np.asarray(q_deg, dtype=np.float64))):
             self.data.ctrl[self._actuator_id(actuator_name)] = float(value)
 
-    def set_left_gripper(self, opening: float) -> None:
+    def set_left_gripper(self, opening: float, *, immediate: bool = False) -> None:
         opening = float(np.clip(opening, self.left_gripper_close, self.left_gripper_open))
         for actuator_name in self.left_finger_actuator_names:
             self.data.ctrl[self._actuator_id(actuator_name)] = opening
+        if immediate:
+            for joint_name in ("left_finger_l", "left_finger_r"):
+                self.data.qpos[self._joint_qpos_address(joint_name)] = opening
+            mujoco.mj_forward(self.model, self.data)
+
+    def left_gripper_gap(self) -> float:
+        finger_q = self.actuator_ctrl(self.left_finger_actuator_names[0])
+        return float(max(0.0, 2.0 * (finger_q - self.left_gripper_pad_halfwidth)))
+
+    def set_left_gripper_gap(self, gap: float, *, immediate: bool = False) -> None:
+        finger_q = self.left_gripper_pad_halfwidth + 0.5 * max(0.0, float(gap))
+        self.set_left_gripper(finger_q, immediate=immediate)
+
+    def arm_joint_names(self, arm: str) -> list[str]:
+        return self.left_joint_names if arm == "left" else self.right_joint_names
+
+    def arm_actuator_names(self, arm: str) -> list[str]:
+        return self.left_actuator_names if arm == "left" else self.right_actuator_names
+
+    def end_effector_site_name(self, arm: str) -> str:
+        return "left_gripper_pinch" if arm == "left" else "right_scoop_tip_site"
+
+    def end_effector_pos(self, arm: str, data: mujoco.MjData | None = None) -> np.ndarray:
+        active_data = self.data if data is None else data
+        site_name = self.end_effector_site_name(arm)
+        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, site_name)
+        if site_id < 0:
+            raise KeyError(f"site not found: {site_name}")
+        return active_data.site_xpos[site_id].copy()
+
+    def solve_ee_position_ik(
+        self,
+        arm: str,
+        target_xyz: np.ndarray,
+        *,
+        iterations: int = 80,
+        tolerance: float = 0.003,
+        damping: float = 0.08,
+        max_step_deg: float = 4.0,
+    ) -> dict[str, float | bool | int]:
+        """손끝 site의 world xyz만 맞추는 간단한 DLS IK를 계산하고 actuator target에 반영한다."""
+        target_xyz = np.asarray(target_xyz, dtype=np.float64)
+        joint_names = self.arm_joint_names(arm)
+        actuator_names = self.arm_actuator_names(arm)
+        qpos_addresses = np.array([self._joint_qpos_address(name) for name in joint_names], dtype=np.int32)
+        dof_addresses = np.array([self._joint_dof_address(name) for name in joint_names], dtype=np.int32)
+        actuator_ids = np.array([self._actuator_id(name) for name in actuator_names], dtype=np.int32)
+        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, self.end_effector_site_name(arm))
+        if site_id < 0:
+            raise KeyError(f"site not found: {self.end_effector_site_name(arm)}")
+
+        scratch = mujoco.MjData(self.model)
+        scratch.qpos[:] = self.data.qpos
+        scratch.qvel[:] = 0.0
+        scratch.ctrl[:] = self.data.ctrl
+
+        # IK는 현재 물리 위치보다 사용자가 명령한 joint target에서 시작한다.
+        q = np.array([self.data.ctrl[actuator_id] for actuator_id in actuator_ids], dtype=np.float64)
+        ctrl_low = self.model.actuator_ctrlrange[actuator_ids, 0].copy()
+        ctrl_high = self.model.actuator_ctrlrange[actuator_ids, 1].copy()
+        max_step = float(np.deg2rad(max_step_deg))
+        last_error = np.inf
+
+        jacp = np.zeros((3, self.model.nv), dtype=np.float64)
+        jacr = np.zeros((3, self.model.nv), dtype=np.float64)
+
+        for iteration in range(int(iterations)):
+            scratch.qpos[qpos_addresses] = q
+            mujoco.mj_forward(self.model, scratch)
+            current = scratch.site_xpos[site_id].copy()
+            error = target_xyz - current
+            last_error = float(np.linalg.norm(error))
+            if last_error <= tolerance:
+                break
+
+            jacp.fill(0.0)
+            jacr.fill(0.0)
+            mujoco.mj_jacSite(self.model, scratch, jacp, jacr, site_id)
+            jac = jacp[:, dof_addresses]
+            lhs = jac @ jac.T + (damping**2) * np.eye(3)
+            delta_q = jac.T @ np.linalg.solve(lhs, error)
+            delta_norm = float(np.max(np.abs(delta_q)))
+            if delta_norm > max_step:
+                delta_q *= max_step / delta_norm
+
+            q = np.clip(q + delta_q, ctrl_low, ctrl_high)
+
+        for actuator_id, value in zip(actuator_ids, q):
+            self.data.ctrl[actuator_id] = float(value)
+
+        mujoco.mj_forward(self.model, self.data)
+        return {
+            "success": bool(last_error <= tolerance),
+            "error_m": float(last_error),
+            "iterations": int(iteration + 1),
+        }
 
     def reset(self) -> None:
         mujoco.mj_resetData(self.model, self.data)
@@ -428,7 +579,7 @@ class DualUR5LowFillEnv:
         self.set_arm_qpos_deg("right", RIGHT_HOME_DEG)
         self.set_arm_target_deg("left", LEFT_HOME_DEG)
         self.set_arm_target_deg("right", RIGHT_HOME_DEG)
-        self.set_left_gripper(self.left_gripper_open)
+        self.set_left_gripper(self.left_gripper_open, immediate=True)
         mujoco.mj_forward(self.model, self.data)
 
     def step(self, steps: int = 1) -> None:
@@ -507,10 +658,9 @@ class KeyboardJointStepper:
         print(f"{self.current_label()} target={np.rad2deg(value):.2f} deg")
 
     def nudge_gripper(self, direction: float) -> None:
-        actuator_name = self.env.left_finger_actuator_names[0]
-        opening = self.env.actuator_ctrl(actuator_name) + direction * self.gripper_step
-        self.env.set_left_gripper(opening)
-        print(f"left 2F opening={self.env.actuator_ctrl(actuator_name):.4f} m")
+        gap = self.env.left_gripper_gap() + direction * self.gripper_step
+        self.env.set_left_gripper_gap(gap, immediate=True)
+        print(f"left 2F pad_gap={self.env.left_gripper_gap():.4f} m")
 
     def handle_key(self, keycode: int) -> None:
         if keycode in (ord("L"), ord("l")):
@@ -564,6 +714,7 @@ def run_viewer(
         viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_FLEXFACE] = True
         viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_FLEXEDGE] = True
         viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_FLEXVERT] = True
+        viewer.opt.geomgroup[:] = True
 
         while viewer.is_running():
             start = time.perf_counter()
