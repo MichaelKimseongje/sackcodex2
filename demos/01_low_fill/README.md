@@ -1,5 +1,26 @@
 # 01_low_fill
 
+## Dual UR5 keyboard joint control
+
+Dual UR5 viewer에서는 MuJoCo 오른쪽 control bar 슬라이더와 함께 키보드 미세 조정을 사용할 수 있습니다.
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py
+```
+
+- `L` / `R`: 왼쪽 2F UR5 / 오른쪽 scoop UR5 선택
+- `1` ... `6`: 현재 arm의 관절 선택
+- `←` / `→`: 이전/다음 관절 선택
+- `↑` / `↓`: 선택 관절 목표각을 작은 단위로 증가/감소
+- `O` / `C`: 왼쪽 2F gripper를 조금 열기/닫기
+- `H`: home pose reset
+
+한 번 누를 때 이동량은 기본 `2 deg`이고, 필요하면 아래처럼 바꿀 수 있습니다.
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py --joint-step-deg 0.5
+```
+
 이 데모는 `underfilled sack surrogate` 하나만 보여주는 독립 MuJoCo 예제입니다.  
 목표는 `lower third는 비교적 차 있고`, `upper half는 비어 있으며`, `upper shell이 slack/collapsed`로 보이는 현상을 빠르고 안정적으로 확인하는 것입니다.
 
@@ -95,3 +116,41 @@ Version B 검증:
 - settle 후 `upper_span_x <= 0.85 * lower_span_x`
 - `bag_height`가 충분히 유지됨
 - Version B에서는 settle 및 lateral impulse 동안 `escaped_internal_bodies == 0`
+
+## Version A / Version B 차이
+
+- `run_demo.py --viewer`
+  - Version A입니다.
+  - 내부 자유 물체 없이 2D flex shell 형상만으로 underfilled pouch를 보여줍니다.
+  - 하단 충전감보다는 "빈 shell이 접히는 저충진 외피"를 확인하는 용도입니다.
+- `run_demo.py --viewer --with-ballast`
+  - Version B입니다.
+  - 하단 중심 근처에 단일 ellipsoid ballast 1개를 넣습니다.
+  - 쌀포대처럼 lower third가 더 차 있고 upper half가 비어 보이는 장면은 이 모드가 더 적합합니다.
+
+현재 기본 형상은 원형 cone ring이 아니라, x 방향으로 긴 타원형 rounded pouch 단면을 사용합니다. 상단은 고정하지 않고 `bag_frame`도 freejoint로 둡니다.
+
+## Dual UR5 + Low Fill Sack
+
+기존 환경처럼 왼쪽 UR5에는 2F gripper, 오른쪽 UR5에는 scoop를 붙인 장면도 제공합니다.  
+이 장면은 아직 baseline이나 자동 파지 정책이 아니라, `저충진 flex sack + dual UR5 end-effector 배치 확인용`입니다.
+
+저충진 ballast 포함 기본 viewer:
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py
+```
+
+ballast 없이 shell-only viewer:
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py --no-ballast
+```
+
+headless 로드 검증:
+
+```powershell
+& 'C:\Users\Michael3080\anaconda3\envs\Yolov9\python.exe' demos/01_low_fill/run_dual_ur5_low_fill.py --headless --seconds 2.0
+```
+
+생성된 XML은 `demos/01_low_fill/generated/dual_ur5_low_fill.xml`에 저장됩니다.

@@ -35,26 +35,29 @@ SHELL_SOLIMP = "0.85 0.95 0.001"
 SHELL_CONDIM = "3"
 
 # underfilled pouch surrogate 형상
-BAG_FRAME_POS_Z = 0.157
-BAG_MASS = 0.28
+BAG_FRAME_POS_Z = 0.160
+BAG_MASS = 0.30
 FRAME_MASS = 0.001
 FRAME_DIAGINERTIA = "1e-6 1e-6 1e-6"
 PIN_TOP_RIM = False
 FREE_FRAME = True
-TOP_CENTER_Z = 0.065
-TOP_RING_RADIUS = 0.032
-TOP_RING_Z = 0.100
-MID_RING_RADIUS = 0.048
-MID_RING_Z = -0.015
-LOWER_RING_RADIUS = 0.078
+TOP_CENTER_Z = 0.055
+TOP_RING_RX = 0.074
+TOP_RING_RY = 0.030
+TOP_RING_Z = 0.090
+MID_RING_RX = 0.080
+MID_RING_RY = 0.037
+MID_RING_Z = -0.020
+LOWER_RING_RX = 0.094
+LOWER_RING_RY = 0.045
 LOWER_RING_Z = -0.120
-BOTTOM_CENTER_Z = -0.152
+BOTTOM_CENTER_Z = -0.154
 
 # 선택적 단일 ballast
 BALLAST_BODY_NAME = "bag_ballast"
-BALLAST_POS = "0 0 -0.108"
-BALLAST_SIZE = "0.028 0.022 0.030"
-BALLAST_MASS = "0.34"
+BALLAST_POS = "0 0 -0.110"
+BALLAST_SIZE = "0.052 0.030 0.030"
+BALLAST_MASS = "0.48"
 
 # 이름 prefix
 BAG_SHELL_BODY_PREFIX = "bag_shell_"
@@ -121,20 +124,20 @@ ELEMENT_TEXT = """
 """.strip()
 
 
-def _ring_points(radius: float, z: float) -> list[list[float]]:
+def _ellipse_ring_points(radius_x: float, radius_y: float, z: float) -> list[list[float]]:
     points: list[list[float]] = []
     for index in range(8):
         angle = 2.0 * math.pi * index / 8.0
-        points.append([radius * math.cos(angle), radius * math.sin(angle), z])
+        points.append([radius_x * math.cos(angle), radius_y * math.sin(angle), z])
     return points
 
 
 def _underfilled_points() -> list[list[float]]:
     return [
         [0.0, 0.0, TOP_CENTER_Z],
-        *_ring_points(TOP_RING_RADIUS, TOP_RING_Z),
-        *_ring_points(MID_RING_RADIUS, MID_RING_Z),
-        *_ring_points(LOWER_RING_RADIUS, LOWER_RING_Z),
+        *_ellipse_ring_points(TOP_RING_RX, TOP_RING_RY, TOP_RING_Z),
+        *_ellipse_ring_points(MID_RING_RX, MID_RING_RY, MID_RING_Z),
+        *_ellipse_ring_points(LOWER_RING_RX, LOWER_RING_RY, LOWER_RING_Z),
         [0.0, 0.0, BOTTOM_CENTER_Z],
     ]
 
@@ -158,9 +161,9 @@ def _parameter_comment() -> str:
 def _add_ballast(bag_frame: ET.Element) -> None:
     body = ET.SubElement(bag_frame, "body", {"name": BALLAST_BODY_NAME, "pos": BALLAST_POS})
     joint_specs = (
-        ("x", "1 0 0", "-0.020 0.020", "10"),
-        ("y", "0 1 0", "-0.020 0.020", "10"),
-        ("z", "0 0 1", "-0.010 0.016", "14"),
+        ("x", "1 0 0", "-0.030 0.030", "10"),
+        ("y", "0 1 0", "-0.018 0.018", "10"),
+        ("z", "0 0 1", "-0.014 0.018", "16"),
     )
     for axis_name, axis, limits, damping in joint_specs:
         ET.SubElement(
@@ -184,7 +187,7 @@ def _add_ballast(bag_frame: ET.Element) -> None:
             "type": "ellipsoid",
             "size": BALLAST_SIZE,
             "mass": BALLAST_MASS,
-            "rgba": "0.48 0.22 0.15 1",
+            "rgba": "0.46 0.21 0.14 1",
             "condim": SHELL_CONDIM,
             "friction": "0.35 0.01 0.001",
         },
@@ -280,7 +283,7 @@ def build_scene_tree(with_ballast: bool = False) -> ET.Element:
             "dim": "2",
             "mass": f"{BAG_MASS:.3f}",
             "radius": f"{SHELL_RADIUS:.4f}",
-            "rgba": "0.75 0.60 0.36 1",
+            "rgba": "0.75 0.60 0.36 0.92",
             "point": _format_points(_underfilled_points()),
             "element": ELEMENT_TEXT,
         },
