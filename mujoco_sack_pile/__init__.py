@@ -1,1 +1,1 @@
-"""MuJoCo 기반 sack pile handling 연구용 환경 패키지."""
+"""MuJoCo 기반 support-state benchmark 패키지."""

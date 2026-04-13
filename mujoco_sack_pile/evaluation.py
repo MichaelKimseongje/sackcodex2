@@ -26,7 +26,7 @@ class EpisodeMetrics:
 
 
 class Evaluator:
-    """연구 질문에 맞는 휴리스틱 평가 함수를 제공한다."""
+    """benchmark 연구 질문에 맞는 task-level 평가 함수를 제공한다."""
 
     def __init__(self, model: mujoco.MjModel):
         self.model = model
@@ -43,11 +43,11 @@ class Evaluator:
         scoop_body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "scoop_tool")
         support_geom_ids = {
             mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_core_geom"),
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_bottom_support"),
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_side_left"),
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_side_right"),
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_front_panel"),
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_back_panel"),
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_bottom_support_proxy"),
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_left_side_proxy"),
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_right_side_proxy"),
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_front_support_proxy"),
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, f"{target_name}_back_support_proxy"),
         }
         scoop_geom_ids = {
             mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, name)

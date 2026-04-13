@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import time
 from pathlib import Path
 
 import numpy as np
 
+from mujoco_sack_pile.benchmark_definition import PILE_DIFFICULTIES
 from mujoco_sack_pile.scene_generator import SceneGenerator
+from mujoco_sack_pile.scene_generator import SACK_VARIANTS
 
 
 class ManualTeleop:
@@ -116,6 +119,35 @@ class ManualTeleop:
         print("  [ ] : gripper 열기 / 닫기")
         print("  H   : 도움말 다시 출력")
 
+class ViewerControls:
+    """viewer 키 입력과 마우스 perturb 도움말을 함께 관리한다."""
+
+    def __init__(self, env, enable_manual: bool):
+        self.env = env
+        self.paused = False
+        self.teleop = ManualTeleop(env) if enable_manual else None
+
+    def handle_key(self, keycode: int):
+        if keycode in (32,):
+            self.paused = not self.paused
+            print(f"viewer_paused={self.paused}")
+            return
+        if keycode in (ord("M"), ord("m")):
+            self.print_help()
+            return
+        if self.teleop is not None:
+            self.teleop.handle_key(keycode)
+
+    def print_help(self):
+        print("mouse_help:")
+        print("  left drag / right drag / wheel : 카메라 이동")
+        print("  double-click body : 객체 선택")
+        print("  Ctrl + drag : 선택한 객체 perturb")
+        print("  Space : 일시정지 / 재개")
+        print("  M : 도움말 다시 출력")
+        if self.teleop is not None:
+            self.teleop._print_help()
+
 
 def main():
     try:
@@ -127,11 +159,16 @@ def main():
     from mujoco_sack_pile.baselines.heuristics import BASELINES
     from mujoco_sack_pile.environment import SackPileEnv
 
-    parser = argparse.ArgumentParser(description="MuJoCo sack pile heuristic baseline runner")
+    parser = argparse.ArgumentParser(
+        description="MuJoCo task-driven benchmark runner for support-state formation under shape and pile uncertainty"
+    )
     parser.add_argument("--baseline", choices=sorted(BASELINES.keys()), default="top_grasp_flat_scoop_drag")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episode-id", type=str, default=None)
     parser.add_argument("--sack-count", type=int, default=None)
+    parser.add_argument("--target-family", choices=sorted(SACK_VARIANTS.keys()), default=None)
+    parser.add_argument("--pile-difficulty", choices=PILE_DIFFICULTIES, default=None)
+    parser.add_argument("--settle-seconds", type=float, default=5.0)
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--fixed-camera", action="store_true")
     parser.add_argument("--preview-only", action="store_true")
@@ -141,21 +178,39 @@ def main():
     base_dir = Path(__file__).resolve().parent
     generator = SceneGenerator(base_dir)
     episode_id = args.episode_id or f"{args.baseline}_seed{args.seed}"
-    scene = generator.generate_episode(seed=args.seed, episode_id=episode_id, sack_count=args.sack_count)
+    scene = generator.generate_episode(
+        seed=args.seed,
+        episode_id=episode_id,
+        sack_count=args.sack_count,
+        target_variant=args.target_family,
+        pile_difficulty=args.pile_difficulty,
+    )
     env = SackPileEnv(scene=scene, log_dir=base_dir / "mujoco_sack_pile" / "logs")
-    env.reset()
+    settle_report = env.reset(settle_seconds=args.settle_seconds, verify_stability=True)
 
     runner = BASELINES[args.baseline]
     if args.headless:
         if args.preview_only:
             print(f"preview_scene={scene.xml_path}")
-            print("preview_only headless 모드에서는 baseline 없이 scene 생성만 수행했습니다.")
+            print(f"benchmark={scene.benchmark_name}")
+            print(f"research_question={scene.research_question}")
+            if scene.target_case is not None:
+                print(f"target_case={scene.target_case.case_id}")
+            print(f"settle_stable={settle_report.stable}")
+            print(f"settle_failure_tags={','.join(settle_report.failure_tags) if settle_report.failure_tags else 'none'}")
+            print("preview_only headless 모드에서는 baseline 없이 benchmark case 생성만 수행했습니다.")
             return
         runner(env, viewer=None)
         metrics = env.finalize_metrics()
         env.save_episode_log(args.baseline, metrics)
         print(f"baseline={args.baseline}")
         print(f"scene_xml={scene.xml_path}")
+        print(f"benchmark={scene.benchmark_name}")
+        print(f"research_question={scene.research_question}")
+        if scene.target_case is not None:
+            print(f"target_case={scene.target_case.case_id}")
+        print(f"settle_stable={settle_report.stable}")
+        print(f"settle_failure_tags={','.join(settle_report.failure_tags) if settle_report.failure_tags else 'none'}")
         print(f"support_success={metrics.support_success}")
         print(f"support_state_score={metrics.support_state_score:.3f}")
         print(f"scoop_insertion_depth={metrics.scoop_insertion_depth:.3f}")
@@ -163,32 +218,42 @@ def main():
         print(f"failure_tags={','.join(metrics.failure_tags) if metrics.failure_tags else 'none'}")
         return
 
-    teleop = ManualTeleop(env) if args.manual_control else None
-    if teleop is not None:
-        teleop._print_help()
+    controls = ViewerControls(env, enable_manual=args.manual_control)
+    controls.print_help()
 
     with mujoco.viewer.launch_passive(
         env.model,
         env.data,
-        key_callback=(teleop.handle_key if teleop is not None else None),
+        key_callback=controls.handle_key,
         show_left_ui=True,
         show_right_ui=True,
     ) as viewer:
         if args.fixed_camera:
-            viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
-            viewer.cam.fixedcamid = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_CAMERA, "overview")
+            with viewer.lock():
+                viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
+                viewer.cam.fixedcamid = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_CAMERA, "overview")
         if args.preview_only:
             print(f"preview_scene={scene.xml_path}")
-            print("preview_only=True, baseline은 실행하지 않습니다.")
+            print(f"benchmark={scene.benchmark_name}")
+            print(f"research_question={scene.research_question}")
+            if scene.target_case is not None:
+                print(f"target_case={scene.target_case.case_id}")
+            print(f"settle_stable={settle_report.stable}")
+            print(f"settle_failure_tags={','.join(settle_report.failure_tags) if settle_report.failure_tags else 'none'}")
+            print("preview_only=True, baseline은 실행하지 않고 benchmark case만 표시합니다.")
         else:
             runner(env, viewer=viewer)
             metrics = env.finalize_metrics()
-            env.visualizer.update(viewer, env.data, metrics, scene.target_name)
+            env.render_viewer(viewer)
             env.save_episode_log(args.baseline, metrics)
             print(f"support_success={metrics.support_success}")
             print(f"support_state_score={metrics.support_state_score:.3f}")
             print(f"failure_tags={metrics.failure_tags}")
         while viewer.is_running():
+            if controls.paused:
+                env.render_viewer(viewer)
+                time.sleep(env.model.opt.timestep)
+                continue
             env.step(1, viewer=viewer, sleep=True)
 
 

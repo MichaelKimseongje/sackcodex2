@@ -1,0 +1,200 @@
+{
+  "episode_id": "regular_well_filled_leaning_wedged_ep0_try0",
+  "seed": 1300,
+  "baseline": "top_grasp_flat_scoop_drag",
+  "benchmark": {
+    "name": "Sack Support-State Benchmark",
+    "scope": "task-driven benchmark",
+    "research_question": "support-state formation under shape and pile uncertainty",
+    "target_case": {
+      "benchmark_name": "Sack Support-State Benchmark",
+      "research_question": "support-state formation under shape and pile uncertainty",
+      "shape_family": "regular_well_filled",
+      "pile_difficulty": "leaning_wedged",
+      "case_id": "regular_well_filled:leaning_wedged",
+      "tags": [
+        "regular_well_filled",
+        "leaning_wedged",
+        "stacked_contact"
+      ]
+    }
+  },
+  "settle_report": {
+    "settle_seconds": 5.0,
+    "settle_steps": 2500,
+    "stable": true,
+    "max_linear_speed": 0.010466474940524504,
+    "max_angular_speed": 0.09633727962288831,
+    "max_position_drift": 0.0027112745111174076,
+    "min_body_height": 0.14060591925165572,
+    "failure_tags": []
+  },
+  "target_name": "sack_0",
+  "target_variant": "regular_well_filled",
+  "target_pile_difficulty": "leaning_wedged",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\regular_well_filled_leaning_wedged_ep0_try0.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.6048180402626171,
+        -0.08488294635029907,
+        0.15731394998573597
+      ],
+      "euler": [
+        -0.4187129840562116,
+        0.08732331180244965,
+        0.4202725363785267
+      ],
+      "exposed_face": "top",
+      "stack_level": 1,
+      "is_target": true,
+      "mesh_file": "sack8.obj",
+      "mesh_scale": 0.07007114287538764,
+      "fill_ratio": 0.8458406113177158,
+      "top_collapse": 0.006661288629796375,
+      "side_bulge": 0.0034906787143604745,
+      "flattening": 0.8239467207582778,
+      "pile_difficulty": "leaning_wedged",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "leaning_wedged",
+        "stacked_contact"
+      ],
+      "benchmark_case_id": "regular_well_filled:leaning_wedged"
+    },
+    {
+      "name": "sack_1",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.5391726347933755,
+        -0.14149730542715608,
+        0.12558613061023027
+      ],
+      "euler": [
+        -0.20572843493039872,
+        0.005475004560993424,
+        -0.03444400802769687
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack.obj",
+      "mesh_scale": 0.07298095238357037,
+      "fill_ratio": 0.5426095590601752,
+      "top_collapse": 0.038588662527408196,
+      "side_bulge": 0.0021277636788785753,
+      "flattening": 0.9982062789567392,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "side_exposed",
+        "top_collapse"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:side_exposed"
+    },
+    {
+      "name": "sack_2",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.61450961334441,
+        0.0068958672459805345,
+        0.13235682460019677
+      ],
+      "euler": [
+        -0.03251092668862632,
+        0.08520132228769317,
+        -2.594124032100671
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack6Apply.obj",
+      "mesh_scale": 0.07597498208067262,
+      "fill_ratio": 0.7638098803119528,
+      "top_collapse": 0.013547556493429268,
+      "side_bulge": 0.016810847373833416,
+      "flattening": 0.9164222862220008,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "side_bulged_unstable",
+        "side_exposed",
+        "side_asymmetry"
+      ],
+      "benchmark_case_id": "side_bulged_unstable:side_exposed"
+    },
+    {
+      "name": "sack_3",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.5529281184711107,
+        0.19664561285541154,
+        0.12143893839993145
+      ],
+      "euler": [
+        0.2167437151182523,
+        -0.08301564009949189,
+        -2.754397637250069
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack7.obj",
+      "mesh_scale": 0.07067120561913762,
+      "fill_ratio": 0.8152352616402404,
+      "top_collapse": 0.0076541046342843335,
+      "side_bulge": 0.007375688345729617,
+      "flattening": 0.8724925090475215,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "side_exposed"
+      ],
+      "benchmark_case_id": "regular_well_filled:side_exposed"
+    },
+    {
+      "name": "sack_4",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.8181427530566668,
+        -0.08900311501678052,
+        0.11205706095440328
+      ],
+      "euler": [
+        -0.13880180956618954,
+        0.1233023869614292,
+        2.6298808653749983
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.0756077936908831,
+      "fill_ratio": 0.8304037676962417,
+      "top_collapse": 0.011034173221998692,
+      "side_bulge": 0.01977117639529626,
+      "flattening": 0.9991684269217589,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "side_bulged_unstable",
+        "side_exposed",
+        "side_asymmetry"
+      ],
+      "benchmark_case_id": "side_bulged_unstable:side_exposed"
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.5090648765889046,
+    "support_success": false,
+    "scoop_insertion_depth": 0.18,
+    "micro_lift_stability": 0.38807062365208045,
+    "slip_distance": 0.0017957952884222284,
+    "tilt_deg": 5.968463223739176,
+    "dropped": false,
+    "contact_count": 34,
+    "failure_tags": [
+      "unstable_micro_lift"
+    ]
+  }
+}

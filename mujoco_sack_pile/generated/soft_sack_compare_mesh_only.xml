@@ -1,0 +1,48 @@
+<mujoco model="soft_sack_compare_mesh_only">
+  <compiler angle="radian" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="120" tolerance="1e-10"/>
+  <size memory="768M" nconmax="16000"/>
+
+  <extension>
+    <plugin plugin="mujoco.elasticity.shell"/>
+  </extension>
+
+  <visual>
+    <global azimuth="128" elevation="-20"/>
+    <headlight ambient="0.35 0.35 0.35" diffuse="0.82 0.82 0.82" specular="0.12 0.12 0.12"/>
+  </visual>
+
+  <default>
+    <geom condim="4" friction="1.25 0.04 0.01" margin="0.0025"/>
+  </default>
+
+  <worldbody>
+    <light name="key" pos="0.95 0.05 1.8" dir="-0.25 -0.04 -1" directional="true"/>
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.94 0.94 0.94 1"/>
+    <geom name="work_pad" type="box" pos="0.62 0 0.010" size="0.30 0.30 0.010" rgba="0.60 0.61 0.62 1" friction="1.5 0.05 0.01"/>
+    <camera name="overview" pos="1.20 0.00 0.90" xyaxes="0 1 0 -0.46 0 0.88"/>
+
+    <body name="bag" pos="0.62 0.00 0.22" euler="0.0805 0.0568 -0.0708">
+      <freejoint name="bag_free"/>
+      <inertial pos="0 0 0" mass="0.03" diaginertia="0.0003 0.0003 0.0003"/>
+      <flexcomp
+          name="bag_shell"
+          type="mesh"
+          file="../../object/sack9.obj"
+          dim="2"
+          mass="0.7641"
+          radius="0.00486"
+          scale="0.07079 0.07079 0.07079">
+        <contact condim="4" friction="1.35 0.04 0.01" solref="0.004 1" solimp="0.95 0.99 0.002"/>
+        <edge equality="false" damping="0.30"/>
+        <plugin plugin="mujoco.elasticity.shell">
+          <config key="poisson" value="0.28"/>
+          <config key="thickness" value="0.0028"/>
+          <config key="young" value="8e4"/>
+        </plugin>
+      </flexcomp>
+      <site name="bag_center_site" pos="0 0 0" size="0.006" rgba="0.840 0.740 0.500 1"/>
+      
+    </body>
+  </worldbody>
+</mujoco>
