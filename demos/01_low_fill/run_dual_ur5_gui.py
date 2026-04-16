@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox
+from typing import Optional
 import tkinter as tk
 
 import mujoco
@@ -73,6 +74,7 @@ class DualUR5Gui:
         self.joint_controls: list[JointControl] = []
         self.ee_controls: dict[str, EndEffectorControl] = {}
         self.ee_after_ids: dict[str, str] = {}
+        self.ee_auto_sync_until: dict[str, float] = {}
         self.shell_body_ids = collect_shell_body_ids(self.env.model)
         self.bag_frame_id = mujoco.mj_name2id(self.env.model, mujoco.mjtObj.mjOBJ_BODY, "bag_frame")
 
@@ -82,7 +84,7 @@ class DualUR5Gui:
         self.ee_step_var = tk.DoubleVar(value=EE_STEP_M_DEFAULT)
         self.status_var = tk.StringVar(value="ready")
 
-        self.root.title("Dual UR5 Low-Fill Sack Control")
+        self.root.title(getattr(self.env, "gui_title", "Dual UR5 Low-Fill Sack Control"))
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self._build()
         self.sync_all_ee_targets_from_current()
@@ -93,7 +95,7 @@ class DualUR5Gui:
         header.pack(fill=tk.X)
         tk.Label(
             header,
-            text="Dual UR5 + low-fill sack controller",
+            text=getattr(self.env, "gui_header", "Dual UR5 + low-fill sack controller"),
             font=("Segoe UI", 12, "bold"),
         ).pack(anchor="w")
         tk.Label(
@@ -239,6 +241,8 @@ class DualUR5Gui:
         tk.Button(pose, text="Save pose JSON", command=self.save_pose).pack(fill=tk.X, pady=2)
         tk.Button(pose, text="Load pose JSON", command=self.load_pose).pack(fill=tk.X, pady=2)
         tk.Button(pose, text="Home reset", command=self.home_reset).pack(fill=tk.X, pady=2)
+        tk.Button(pose, text="Move 2F to nearest grasp", command=self.move_left_to_nearest_grasp).pack(fill=tk.X, pady=(8, 2))
+        tk.Button(pose, text="Close gripper", command=self.close_left_gripper).pack(fill=tk.X, pady=2)
 
         bag = tk.LabelFrame(bottom, text="Sack position", padx=8, pady=6)
         bag.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -249,11 +253,14 @@ class DualUR5Gui:
     def on_joint_slider(self, actuator_name: str, var: tk.DoubleVar) -> None:
         if self.updating:
             return
+        arm = self.arm_for_actuator(actuator_name)
         with self.lock:
             actuator_id = self.env._actuator_id(actuator_name)
             low, high = self.env.model.actuator_ctrlrange[actuator_id]
             target_rad = float(np.clip(np.deg2rad(var.get()), low, high))
             self.env.data.ctrl[actuator_id] = target_rad
+        if arm is not None:
+            self.enable_ee_auto_sync(arm)
         self.status_var.set(f"{actuator_name} target = {var.get():.1f} deg")
 
     def on_gripper_slider(self, value: str) -> None:
@@ -264,11 +271,28 @@ class DualUR5Gui:
         self.status_var.set(f"left gripper pad gap = {float(value):.1f} mm")
 
     def nudge_joint(self, actuator_name: str, delta_deg: float) -> None:
+        arm = self.arm_for_actuator(actuator_name)
         with self.lock:
             value_rad = self.env.add_actuator_delta(actuator_name, np.deg2rad(delta_deg))
             value_deg = float(np.rad2deg(value_rad))
         self._set_joint_var(actuator_name, value_deg)
+        if arm is not None:
+            self.enable_ee_auto_sync(arm)
         self.status_var.set(f"{actuator_name} target = {value_deg:.1f} deg")
+
+    def arm_for_actuator(self, actuator_name: str) -> Optional[str]:
+        if actuator_name in self.env.left_actuator_names:
+            return "left"
+        if actuator_name in self.env.right_actuator_names:
+            return "right"
+        return None
+
+    def enable_ee_auto_sync(self, arm: str, duration_s: float = 2.0) -> None:
+        # joint 조작 후에는 EE target slider가 실제 EE 위치를 잠깐 따라오게 해서 x/y/z 조작 시 튐을 막는다.
+        self.ee_auto_sync_until[arm] = time.perf_counter() + duration_s
+
+    def disable_ee_auto_sync(self, arm: str) -> None:
+        self.ee_auto_sync_until[arm] = 0.0
 
     def sync_all_ee_targets_from_current(self) -> None:
         for arm in self.ee_controls:
@@ -289,12 +313,14 @@ class DualUR5Gui:
     def schedule_ee_ik(self, arm: str) -> None:
         if self.updating:
             return
+        self.disable_ee_auto_sync(arm)
         previous_id = self.ee_after_ids.get(arm)
         if previous_id is not None:
             self.root.after_cancel(previous_id)
         self.ee_after_ids[arm] = self.root.after(120, lambda a=arm: self.apply_ee_ik(a))
 
     def apply_ee_ik(self, arm: str) -> None:
+        self.disable_ee_auto_sync(arm)
         previous_id = self.ee_after_ids.pop(arm, None)
         if previous_id is not None:
             try:
@@ -323,6 +349,7 @@ class DualUR5Gui:
         self.status_var.set(f"{arm} EE IK {status}: error={result['error_m']:.4f} m, iter={result['iterations']}")
 
     def nudge_ee(self, arm: str, axis: str, delta_m: float) -> None:
+        self.disable_ee_auto_sync(arm)
         control = self.ee_controls[arm]
         self.updating = True
         try:
@@ -331,10 +358,42 @@ class DualUR5Gui:
             self.updating = False
         self.apply_ee_ik(arm)
 
+    def move_left_to_nearest_grasp(self) -> None:
+        with self.lock:
+            reference_xyz = self.env.end_effector_pos("left")
+            if hasattr(self.env, "nearest_grasp_target"):
+                site_name, target_xyz = self.env.nearest_grasp_target(reference_xyz)
+            else:
+                site_name = self.env.nearest_grasp_site_name(reference_xyz)
+                target_xyz = self.env.site_pos(site_name)
+            target_xyz = target_xyz + np.array([0.0, 0.0, 0.010], dtype=np.float64)
+        control = self.ee_controls["left"]
+        self.updating = True
+        try:
+            for axis, value in zip(("x", "y", "z"), target_xyz):
+                control.target_vars[axis].set(round(float(value), 4))
+        finally:
+            self.updating = False
+        self.apply_ee_ik("left")
+        self.status_var.set(f"left 2F moved toward {site_name}")
+
+    def close_left_gripper(self) -> None:
+        with self.lock:
+            self.env.set_left_gripper_gap(self.env.left_gripper_grasp_gap, immediate=True)
+            gap_mm = self.env.left_gripper_gap() * 1000.0
+        self.updating = True
+        try:
+            self.gripper_var.set(gap_mm)
+        finally:
+            self.updating = False
+        self.status_var.set(f"left 2F closed: gap={gap_mm:.1f} mm")
+
     def home_reset(self) -> None:
         with self.lock:
             self.env.reset()
         self.status_var.set("home pose reset")
+        for arm in self.ee_controls:
+            self.enable_ee_auto_sync(arm, duration_s=0.5)
         self.sync_all_ee_targets_from_current()
         self.refresh_from_sim()
 
@@ -397,6 +456,9 @@ class DualUR5Gui:
                 actuator_id = self.env._actuator_id(control.actuator_name)
                 low, high = self.env.model.actuator_ctrlrange[actuator_id]
                 self.env.data.ctrl[actuator_id] = float(np.clip(np.deg2rad(targets[control.actuator_name]), low, high))
+                arm = self.arm_for_actuator(control.actuator_name)
+                if arm is not None:
+                    self.enable_ee_auto_sync(arm)
             if "left_gripper_gap_mm" in payload:
                 self.env.set_left_gripper_gap(float(payload["left_gripper_gap_mm"]) / 1000.0, immediate=True)
             elif "left_gripper_opening_mm" in payload:
@@ -407,6 +469,7 @@ class DualUR5Gui:
                 for arm, target in payload.get("ee_targets_xyz_m", {}).items():
                     if arm not in self.ee_controls:
                         continue
+                    self.disable_ee_auto_sync(arm)
                     for axis in ("x", "y", "z"):
                         if axis in target:
                             self.ee_controls[arm].target_vars[axis].set(float(target[axis]))
@@ -445,6 +508,9 @@ class DualUR5Gui:
                     control.current_var.set(
                         f"current xyz [m]: x={ee_xyz[0]: .3f}, y={ee_xyz[1]: .3f}, z={ee_xyz[2]: .3f}"
                     )
+                    if self.ee_auto_sync_until.get(arm, 0.0) > time.perf_counter():
+                        for axis, value in zip(("x", "y", "z"), ee_xyz):
+                            control.target_vars[axis].set(round(float(value), 4))
 
                 if self.bag_frame_id >= 0:
                     frame_xyz = self.env.data.xpos[self.bag_frame_id].copy()
@@ -519,6 +585,9 @@ def smoke_test(with_ballast: bool) -> int:
     right_target = env.end_effector_pos("right") + np.array([0.0, 0.0, 0.01], dtype=np.float64)
     left_ik = env.solve_ee_position_ik("left", left_target)
     right_ik = env.solve_ee_position_ik("right", right_target)
+    grasp_site_name = env.nearest_grasp_site_name(env.end_effector_pos("left"))
+    grasp_target = env.site_pos(grasp_site_name)
+    grasp_ik = env.solve_ee_position_ik("left", grasp_target)
     env.set_left_gripper_gap(0.0, immediate=True)
     bag_frame_id = mujoco.mj_name2id(env.model, mujoco.mjtObj.mjOBJ_BODY, "bag_frame")
     shell_count = len(collect_shell_body_ids(env.model))
@@ -528,6 +597,9 @@ def smoke_test(with_ballast: bool) -> int:
     print(f"shell_body_count={shell_count}")
     print(f"left_ee_ik={left_ik}")
     print(f"right_ee_ik={right_ik}")
+    print(f"nearest_grasp_site={grasp_site_name}")
+    print(f"nearest_grasp_ik={grasp_ik}")
+    print(f"nearest_grasp_site_pos={grasp_target.tolist()}")
     print(f"left_gripper_gap_m={env.left_gripper_gap()}")
     print("gui_smoke_pass=True")
     return 0
@@ -538,7 +610,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-ballast", action="store_true", help="use shell-only low-fill sack")
     parser.add_argument("--speed", type=float, default=1.0, help="viewer simulation speed multiplier")
     parser.add_argument("--joint-step-deg", type=float, default=JOINT_STEP_DEG_DEFAULT, help="joint +/- button and arrow-key step in degrees")
-    parser.add_argument("--no-keyboard-control", action="store_true", help="disable keyboard control inside the MuJoCo viewer")
+    parser.add_argument("--keyboard-control", action="store_true", help="enable keyboard control inside the MuJoCo viewer")
+    parser.add_argument("--no-keyboard-control", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--smoke-test", action="store_true", help="load the scene without opening GUI windows")
     return parser.parse_args()
 
@@ -561,7 +634,7 @@ def main() -> int:
             "lock": lock,
             "stop_event": stop_event,
             "speed": args.speed,
-            "keyboard_control": not args.no_keyboard_control,
+            "keyboard_control": args.keyboard_control and not args.no_keyboard_control,
             "joint_step_deg": args.joint_step_deg,
         },
         daemon=True,

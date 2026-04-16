@@ -1,0 +1,2 @@
+scenario_name,requested_target_label,actual_region_label_at_close,trapped_patch_count,bilateral_contact_balance,pull_test_slip_mm,load_following_ratio,connect_activated,lift_height,hold_time,final_slip_distance,drop_or_not,no_graspable_patch_found,mode,accepted_candidate_rank,jaw_escape
+top_fold_simple,fold,seam,5,1.0,33.96534956007749,-0.014289294886839785,False,0.0008603287003217108,0.65,0.0880725221584791,True,True,contact_only_eval,0,False

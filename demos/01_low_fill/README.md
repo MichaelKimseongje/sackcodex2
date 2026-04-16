@@ -12,6 +12,16 @@
 - 2F gripper: `pad gap [mm]` 기준으로 조작하며, `0 mm`이면 두 finger pad가 닫히는 상태입니다.
 - Pose JSON: joint target degree, EE target xyz, gripper gap을 저장/불러옵니다.
 
+## 2F Grasp Helper
+
+얇은 flex shell 자체는 접힌 부분을 바로 집기 어렵기 때문에, 자루 상단 둘레에 `bag_graspable_band`라는 물리적 seam/grip band를 추가했습니다. 이는 특정 한 점만 잡으라는 뜻이 아니라, 실제 마대자루의 접힌 seam, 천 두께, 잡히는 주름을 둘레 방향으로 단순화한 task-driven grasp layer입니다.
+
+GUI 사용 순서:
+
+- `Move 2F to nearest grasp`: 현재 2F 위치에서 가장 가까운 `bag_grasp_site_XX` 근처로 이동합니다.
+- `Close gripper`: gripper를 닫습니다.
+- 이후 왼쪽 end-effector의 `z` 값을 올리면 micro-lift처럼 자루가 같이 따라오는지 확인할 수 있습니다.
+
 ## Dual UR5 keyboard joint control
 
 Dual UR5 viewer에서는 MuJoCo 오른쪽 control bar 슬라이더와 함께 키보드 미세 조정을 사용할 수 있습니다.

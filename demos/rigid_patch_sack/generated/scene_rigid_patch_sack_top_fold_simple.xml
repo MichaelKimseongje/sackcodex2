@@ -1,0 +1,196 @@
+<mujoco model="sealed_articulated_sack_v2_top_fold_simple">
+  <compiler angle="degree" autolimits="true" />
+  <option timestep="0.001000" gravity="0 0 -9.81" integrator="implicitfast" solver="Newton" iterations="100" ls_iterations="24" cone="elliptic" jacobian="sparse" impratio="4" />
+  <size nconmax="900" njmax="1800" />
+  <visual>
+    <global offwidth="1280" offheight="820" />
+  </visual>
+  <worldbody>
+    <geom friction="1.5 0.05 0.005" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="floor" type="plane" pos="0 0 0" size="2.0 2.0 0.05" rgba="0.90 0.90 0.88 1" />
+    <light name="key_light" pos="0.4 -0.7 1.5" dir="-0.3 0.4 -1" />
+    <camera name="overview" pos="0.86 -0.86 0.72" xyaxes="0.72 0.69 0 -0.34 0.35 0.87" />
+    <camera name="front" pos="0.78 0 0.36" xyaxes="0 1 0 -0.25 0 0.97" />
+    <camera name="side" pos="0 -0.78 0.36" xyaxes="1 0 0 0 0.25 0.97" />
+    <body name="gripper_left_mocap" mocap="true" pos="0 -0.080000 0.230">
+      <geom friction="2.2 0.10 0.008" condim="4" solref="0.030 1" solimp="0.78 0.94 0.001" name="gripper_left_mocap_pad" type="box" size="0.020 0.008 0.055" rgba="0.15 0.35 0.95 0.85" />
+      <site name="gripper_left_mocap_site" pos="0 0 0" size="0.006" rgba="0.15 0.35 0.95 0.85" />
+    </body>
+    <body name="gripper_right_mocap" mocap="true" pos="0 0.080000 0.230">
+      <geom friction="2.2 0.10 0.008" condim="4" solref="0.030 1" solimp="0.78 0.94 0.001" name="gripper_right_mocap_pad" type="box" size="0.020 0.008 0.055" rgba="0.95 0.25 0.12 0.85" />
+      <site name="gripper_right_mocap_site" pos="0 0 0" size="0.006" rgba="0.95 0.25 0.12 0.85" />
+    </body>
+    <body name="gripper_center_mocap" mocap="true" pos="0 0 0.230">
+      <site name="gripper_center_site" pos="0 0 0" size="0.006" rgba="1 1 0 0.8" />
+    </body>
+    <body name="neighbor_left" pos="0 0.125000 0.145" euler="0 0 8.000">
+      <geom friction="1.8 0.12 0.01" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="neighbor_left_geom" type="ellipsoid" size="0.128 0.050 0.060" mass="0.65" rgba="0.50 0.42 0.30 0.05" contype="0" conaffinity="0" />
+    </body>
+    <body name="neighbor_right" pos="0 -0.125000 0.145" euler="0 0 -8.000">
+      <geom friction="1.8 0.12 0.01" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="neighbor_right_geom" type="ellipsoid" size="0.128 0.050 0.060" mass="0.65" rgba="0.50 0.42 0.30 0.05" contype="0" conaffinity="0" />
+    </body>
+    <body name="bag_frame" pos="0 0 0.188" euler="0 0.000000 0">
+      <freejoint name="bag_frame_freejoint" />
+      <site name="bag_frame_origin" pos="0 0 0" size="0.007" rgba="1 0 0 0.7" />
+      <body name="seam_band_00" pos="0.089623 0.019799 0.118000" euler="0 0 102.457354">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_00_geom" type="box" size="0.022562 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_00" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_00" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_01" pos="0.037123 0.047799 0.118000" euler="0 0 142.165284">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_01_geom" type="box" size="0.034216 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_01" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_01" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_02" pos="-0.037123 0.047799 0.118000" euler="0 0 217.834716">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_02_geom" type="box" size="0.034216 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_02" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_02" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_03" pos="-0.089623 0.019799 0.118000" euler="0 0 257.542646">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_03_geom" type="box" size="0.022562 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_03" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_03" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_04" pos="-0.089623 -0.019799 0.118000" euler="0 0 -77.542646">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_04_geom" type="box" size="0.022562 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_04" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_04" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_05" pos="-0.037123 -0.047799 0.118000" euler="0 0 -37.834716">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_05_geom" type="box" size="0.034216 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_05" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_05" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_06" pos="0.037123 -0.047799 0.118000" euler="0 0 37.834716">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_06_geom" type="box" size="0.034216 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_06" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_06" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="seam_band_07" pos="0.089623 -0.019799 0.118000" euler="0 0 77.542646">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="seam_band_07_geom" type="box" size="0.022562 0.006000 0.005000" mass="0.016" rgba="0.36 0.20 0.08 0.88" />
+        <site name="grasp_seam_07" pos="0 0 0" size="0.005" rgba="1 0.55 0.12 0.75" />
+        <site name="grasp_rim_07" pos="0 0 0" size="0.003" rgba="1 0.55 0.12 0.18" />
+      </body>
+      <body name="shoulder_panel_00" pos="0.089623 0.019799 0.106000" euler="0 0 102.457354">
+        <joint name="shoulder_panel_00_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_00_geom" type="box" pos="0 0.009000 -0.041000" size="0.025069 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_00" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_01" pos="0.037123 0.047799 0.106000" euler="0 0 142.165284">
+        <joint name="shoulder_panel_01_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_01_geom" type="box" pos="0 0.009000 -0.041000" size="0.038018 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_01" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_02" pos="-0.037123 0.047799 0.106000" euler="0 0 217.834716">
+        <joint name="shoulder_panel_02_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_02_geom" type="box" pos="0 0.009000 -0.041000" size="0.038018 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_02" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_03" pos="-0.089623 0.019799 0.106000" euler="0 0 257.542646">
+        <joint name="shoulder_panel_03_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_03_geom" type="box" pos="0 0.009000 -0.041000" size="0.025069 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_03" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_04" pos="-0.089623 -0.019799 0.106000" euler="0 0 -77.542646">
+        <joint name="shoulder_panel_04_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_04_geom" type="box" pos="0 0.009000 -0.041000" size="0.025069 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_04" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_05" pos="-0.037123 -0.047799 0.106000" euler="0 0 -37.834716">
+        <joint name="shoulder_panel_05_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_05_geom" type="box" pos="0 0.009000 -0.041000" size="0.038018 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_05" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_06" pos="0.037123 -0.047799 0.106000" euler="0 0 37.834716">
+        <joint name="shoulder_panel_06_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_06_geom" type="box" pos="0 0.009000 -0.041000" size="0.038018 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_06" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="shoulder_panel_07" pos="0.089623 -0.019799 0.106000" euler="0 0 77.542646">
+        <joint name="shoulder_panel_07_hinge" type="hinge" axis="1 0 0" limited="true" range="-38 48" damping="9.0" stiffness="2.6" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="shoulder_panel_07_geom" type="box" pos="0 0.009000 -0.041000" size="0.025069 0.010000 0.041000" mass="0.028" rgba="0.72 0.52 0.27 0.86" />
+        <site name="grasp_shoulder_07" pos="0 0.006300 -0.028700" size="0.006" rgba="0.10 0.75 0.25 0.80" />
+      </body>
+      <body name="belly_panel_00" pos="0.089623 0.019799 0.035000" euler="0 0 102.457354">
+        <joint name="belly_panel_00_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_00_geom" type="box" pos="0 -0.006000 -0.047000" size="0.026573 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_01" pos="0.037123 0.047799 0.035000" euler="0 0 142.165284">
+        <joint name="belly_panel_01_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_01_geom" type="box" pos="0 -0.006000 -0.047000" size="0.040299 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_02" pos="-0.037123 0.047799 0.035000" euler="0 0 217.834716">
+        <joint name="belly_panel_02_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_02_geom" type="box" pos="0 -0.006000 -0.047000" size="0.040299 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_03" pos="-0.089623 0.019799 0.035000" euler="0 0 257.542646">
+        <joint name="belly_panel_03_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_03_geom" type="box" pos="0 -0.006000 -0.047000" size="0.026573 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_04" pos="-0.089623 -0.019799 0.035000" euler="0 0 -77.542646">
+        <joint name="belly_panel_04_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_04_geom" type="box" pos="0 -0.006000 -0.047000" size="0.026573 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_05" pos="-0.037123 -0.047799 0.035000" euler="0 0 -37.834716">
+        <joint name="belly_panel_05_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_05_geom" type="box" pos="0 -0.006000 -0.047000" size="0.040299 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_06" pos="0.037123 -0.047799 0.035000" euler="0 0 37.834716">
+        <joint name="belly_panel_06_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_06_geom" type="box" pos="0 -0.006000 -0.047000" size="0.040299 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="belly_panel_07" pos="0.089623 -0.019799 0.035000" euler="0 0 77.542646">
+        <joint name="belly_panel_07_hinge" type="hinge" axis="1 0 0" limited="true" range="-46 58" damping="10.5" stiffness="1.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="belly_panel_07_geom" type="box" pos="0 -0.006000 -0.047000" size="0.026573 0.012000 0.047000" mass="0.034" rgba="0.64 0.43 0.21 0.88" />
+      </body>
+      <body name="bottom_sling" pos="0 0 -0.122000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="bottom_sling_pad" type="box" size="0.082 0.048 0.008" mass="0.065" rgba="0.58 0.35 0.15 0.78" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="bottom_sling_cross" type="box" euler="0 0 34" size="0.072 0.010 0.010" mass="0.022" rgba="0.46 0.26 0.10 0.74" />
+        <site name="bottom_cradle_site" pos="0 0 0" size="0.004" rgba="0.8 0.4 0.1 0.7" />
+      </body>
+      <body name="fold_root_flap_1" pos="-0.020000 0.030000 0.130000" euler="-64.000000 0 0">
+        <joint name="fold_root_flap_1_hinge" type="hinge" axis="1 0 0" limited="true" range="-125 22" damping="7.5" stiffness="2.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_1_geom" type="box" pos="0 0.026 -0.012" size="0.084592 0.012000 0.026000" mass="0.024" rgba="0.70 0.50 0.27 0.88" contype="1" conaffinity="1" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_1_roll" type="capsule" fromto="-0.071904 0.004 0.017 0.071904 0.004 0.017" size="0.010000" mass="0.006" rgba="0.42 0.24 0.09 0.92" contype="0" conaffinity="0" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_1_wrinkle_0" type="capsule" fromto="-0.075000 0.020 0.012 -0.039000 0.050 -0.004" size="0.0024" mass="0.001" rgba="0.26 0.14 0.05 0.62" contype="0" conaffinity="0" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_1_wrinkle_1" type="capsule" fromto="-0.020000 0.020 0.012 0.016000 0.050 -0.004" size="0.0024" mass="0.001" rgba="0.26 0.14 0.05 0.62" contype="0" conaffinity="0" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_1_wrinkle_2" type="capsule" fromto="0.035000 0.020 0.012 0.071000 0.050 -0.004" size="0.0024" mass="0.001" rgba="0.26 0.14 0.05 0.62" contype="0" conaffinity="0" />
+        <site name="grasp_fold_1" pos="0 0.026 -0.012" size="0.005" rgba="0.1 0.2 1 0.35" />
+        <site name="grasp_fold_root_1" pos="0 0.026 -0.012" size="0.004" rgba="0.1 0.2 1 0.15" />
+      </body>
+      <body name="fold_root_flap_2" pos="0.030000 0.018000 0.120000" euler="-88.000000 0 0">
+        <joint name="fold_root_flap_2_hinge" type="hinge" axis="1 0 0" limited="true" range="-125 22" damping="7.5" stiffness="2.8" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="fold_root_flap_2_geom" type="box" pos="0 0.026 -0.012" size="0.084592 0.012000 0.026000" mass="0.001" rgba="0.70 0.50 0.27 0.05" contype="0" conaffinity="0" />
+        <site name="grasp_fold_2" pos="0 0.026 -0.012" size="0.005" rgba="0.1 0.2 1 0.35" />
+        <site name="grasp_fold_root_2" pos="0 0.026 -0.012" size="0.004" rgba="0.1 0.2 1 0.15" />
+      </body>
+      <body name="payload_main" pos="0.000000 0.000000 -0.104000">
+        <joint name="payload_main_x" type="slide" axis="1 0 0" limited="true" range="-0.030 0.030" damping="20" stiffness="3.0" />
+        <joint name="payload_main_y" type="slide" axis="0 1 0" limited="true" range="-0.026 0.026" damping="20" stiffness="3.0" />
+        <joint name="payload_main_z" type="slide" axis="0 0 1" limited="true" range="-0.020 0.020" damping="20" stiffness="3.0" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="payload_main_geom" type="ellipsoid" size="0.064000 0.040000 0.040000" mass="0.4200" rgba="0.42 0.22 0.10 0.72" contype="1" conaffinity="1" />
+      </body>
+      <body name="payload_aux" pos="0.000000 0.000000 -0.095000">
+        <joint name="payload_aux_x" type="slide" axis="1 0 0" limited="true" range="-0.030 0.030" damping="20" stiffness="3.0" />
+        <joint name="payload_aux_y" type="slide" axis="0 1 0" limited="true" range="-0.026 0.026" damping="20" stiffness="3.0" />
+        <joint name="payload_aux_z" type="slide" axis="0 0 1" limited="true" range="-0.020 0.020" damping="20" stiffness="3.0" />
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="payload_aux_geom" type="ellipsoid" size="0.038000 0.028000 0.028000" mass="0.1400" rgba="0.60 0.28 0.12 0.05" contype="0" conaffinity="0" />
+      </body>
+      <body name="visual_upper_hull" pos="0.000000 0.000000 0.042000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="visual_upper_hull_geom" type="ellipsoid" size="0.096600 0.051520 0.073600" rgba="0.78 0.62 0.38 0.30" contype="0" conaffinity="0" mass="0.001" />
+      </body>
+      <body name="visual_lower_hull" pos="0.000000 0.000000 -0.072000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="visual_lower_hull_geom" type="ellipsoid" size="0.105000 0.056000 0.092000" rgba="0.72 0.50 0.25 0.40" contype="0" conaffinity="0" mass="0.001" />
+      </body>
+      <body name="visual_lower_fill" pos="0.000000 0.000000 -0.104000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="visual_lower_fill_geom" type="ellipsoid" size="0.073600 0.044800 0.042000" rgba="0.42 0.22 0.10 0.34" contype="0" conaffinity="0" mass="0.001" />
+      </body>
+      <body name="sealed_top_cap_visual" pos="0 0 0.127000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="sealed_top_cap_visual_geom" type="ellipsoid" size="0.060900 0.028000 0.006000" rgba="0.80 0.62 0.36 0.58" contype="0" conaffinity="0" mass="0.001" />
+      </body>
+      <body name="sealed_top_stitch_visual" pos="0 0 0.135000">
+        <geom friction="1.25 0.08 0.006" condim="4" solref="0.026 1" solimp="0.82 0.96 0.001" name="sealed_top_stitch_visual_geom" type="capsule" fromto="-0.064 0 0 0.064 0 0" size="0.0035" rgba="0.24 0.13 0.05 0.76" contype="0" conaffinity="0" mass="0.001" />
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

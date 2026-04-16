@@ -36,6 +36,7 @@ from low_fill_builder import (
     SHELL_SOLREF,
     SOLVER,
     TIMESTEP,
+    TOP_RING_Z,
     _format_points,
     _underfilled_points,
     collect_shell_body_ids,
@@ -56,6 +57,11 @@ RIGHT_HOME_DEG = np.array([-88.0, -88.0, 96.0, -98.0, 88.0, 0.0], dtype=np.float
 LOW_FILL_WORLD_POS = np.array([0.40, 0.0, BAG_FRAME_POS_Z], dtype=np.float64)
 JOINT_STEP_DEG_DEFAULT = 2.0
 GRIPPER_STEP_DEFAULT = 0.002
+GRASP_BAND_RX = 0.078
+GRASP_BAND_RY = 0.035
+GRASP_BAND_Z = TOP_RING_Z + 0.006
+GRASP_BAND_RADIUS = 0.010
+GRASP_BAND_SEGMENTS = 12
 
 # GLFW key code와 동일한 값이다. MuJoCo Python viewer가 별도 상수를 노출하지 않는 환경이 있어 직접 둔다.
 KEY_RIGHT = 262
@@ -108,9 +114,11 @@ class DualUR5LowFillEnv:
             "right_wrist_3",
         ]
         self.left_finger_actuator_names = ["left_finger_l_act", "left_finger_r_act"]
-        self.left_gripper_open = 0.040
-        self.left_gripper_close = 0.006
-        self.left_gripper_pad_halfwidth = 0.006
+        # Robotiq 2F-140 proxy: 약 140 mm stroke를 slide-jaw 방식으로 단순화한다.
+        self.left_gripper_open = 0.080
+        self.left_gripper_close = 0.010
+        self.left_gripper_pad_halfwidth = 0.010
+        self.left_gripper_grasp_gap = 0.0
 
         self.write_scene_xml()
         self.model = mujoco.MjModel.from_xml_path(str(self.scene_path))
@@ -181,16 +189,24 @@ class DualUR5LowFillEnv:
         gripper = ET.fromstring(
             """
         <body name="left_gripper_base" pos="0 0.10 0" quat="-1 1 0 0">
-          <geom name="left_gripper_palm" type="box" size="0.022 0.022 0.032" rgba="0.12 0.12 0.12 1"/>
-          <body name="left_finger_l_body" pos="0 0 0.067">
-            <joint name="left_finger_l" type="slide" axis="0 1 0" limited="true" range="0.006 0.040" damping="8"/>
-            <geom name="left_finger_l_pad" type="box" pos="0 0 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
+          <geom name="left_robotiq_mount" type="box" pos="-0.032 0 0.000" size="0.014 0.056 0.030" rgba="0.06 0.06 0.065 1" contype="0" conaffinity="0"/>
+          <geom name="left_gripper_palm" type="box" pos="0 0 0.030" size="0.034 0.064 0.034" rgba="0.13 0.13 0.14 1" contype="0" conaffinity="0"/>
+          <geom name="left_robotiq_silver_face" type="box" pos="0.006 0 0.066" size="0.028 0.058 0.012" rgba="0.62 0.64 0.66 1" contype="0" conaffinity="0"/>
+          <body name="left_finger_l_body" pos="0 0 0.092">
+            <joint name="left_finger_l" type="slide" axis="0 1 0" limited="true" range="0.010 0.080" damping="22"/>
+            <geom name="left_finger_l_outer_knuckle" type="box" pos="-0.012 0.027 -0.030" size="0.012 0.010 0.046" rgba="0.48 0.50 0.52 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_l_inner_link" type="box" pos="0.000 0.017 0.030" size="0.014 0.008 0.072" rgba="0.36 0.37 0.39 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_l_tip_round" type="capsule" fromto="0 0 0.088 0 0 0.112" size="0.014" rgba="0.08 0.08 0.085 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_l_pad" type="box" pos="0 0 0.044" size="0.024 0.0100 0.078" rgba="0.03 0.03 0.032 1" friction="2.4 0.12 0.01" condim="4" margin="0.0015" solref="0.030 1" solimp="0.78 0.94 0.001"/>
           </body>
-          <body name="left_finger_r_body" pos="0 0 0.067">
-            <joint name="left_finger_r" type="slide" axis="0 -1 0" limited="true" range="0.006 0.040" damping="8"/>
-            <geom name="left_finger_r_pad" type="box" pos="0 0 0" size="0.011 0.006 0.034" rgba="0.10 0.10 0.10 1" friction="2.0 0.05 0.01"/>
+          <body name="left_finger_r_body" pos="0 0 0.092">
+            <joint name="left_finger_r" type="slide" axis="0 -1 0" limited="true" range="0.010 0.080" damping="22"/>
+            <geom name="left_finger_r_outer_knuckle" type="box" pos="-0.012 -0.027 -0.030" size="0.012 0.010 0.046" rgba="0.48 0.50 0.52 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_r_inner_link" type="box" pos="0.000 -0.017 0.030" size="0.014 0.008 0.072" rgba="0.36 0.37 0.39 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_r_tip_round" type="capsule" fromto="0 0 0.088 0 0 0.112" size="0.014" rgba="0.08 0.08 0.085 1" contype="0" conaffinity="0"/>
+            <geom name="left_finger_r_pad" type="box" pos="0 0 0.044" size="0.024 0.0100 0.078" rgba="0.03 0.03 0.032 1" friction="2.4 0.12 0.01" condim="4" margin="0.0015" solref="0.030 1" solimp="0.78 0.94 0.001"/>
           </body>
-          <site name="left_gripper_pinch" pos="0 0 0.067" size="0.006" rgba="1 0 0 1"/>
+          <site name="left_gripper_pinch" pos="0 0 0.150" size="0.006" rgba="1 0 0 1"/>
         </body>
         """
         )
@@ -260,6 +276,53 @@ class DualUR5LowFillEnv:
                 },
             )
 
+    def _add_graspable_band(self, bag_frame: ET.Element) -> None:
+        """상단 둘레에 seam/주름 두께를 단순화한 graspable band를 추가한다."""
+        band = ET.SubElement(bag_frame, "body", {"name": "bag_graspable_band", "pos": "0 0 0"})
+        points = []
+        for index in range(GRASP_BAND_SEGMENTS):
+            theta = 2.0 * np.pi * index / GRASP_BAND_SEGMENTS
+            points.append(
+                np.array(
+                    [
+                        GRASP_BAND_RX * np.cos(theta),
+                        GRASP_BAND_RY * np.sin(theta),
+                        GRASP_BAND_Z,
+                    ],
+                    dtype=np.float64,
+                )
+            )
+
+        for index, start in enumerate(points):
+            end = points[(index + 1) % len(points)]
+            midpoint = 0.5 * (start + end)
+            ET.SubElement(
+                band,
+                "geom",
+                {
+                    "name": f"bag_grasp_band_seg_{index:02d}",
+                    "type": "capsule",
+                    "fromto": f"{start[0]:.6f} {start[1]:.6f} {start[2]:.6f} {end[0]:.6f} {end[1]:.6f} {end[2]:.6f}",
+                    "size": f"{GRASP_BAND_RADIUS:.6f}",
+                    "mass": "0.006",
+                    "rgba": "0.95 0.55 0.18 0.65",
+                    "friction": "3.5 0.20 0.02",
+                    "condim": "4",
+                    "solref": "0.012 1",
+                    "solimp": "0.90 0.98 0.001",
+                },
+            )
+            ET.SubElement(
+                band,
+                "site",
+                {
+                    "name": f"bag_grasp_site_{index:02d}",
+                    "pos": f"{midpoint[0]:.6f} {midpoint[1]:.6f} {midpoint[2]:.6f}",
+                    "size": "0.007",
+                    "rgba": "1 0.4 0 1",
+                },
+            )
+
     def _low_fill_body(self) -> ET.Element:
         bag_frame = ET.Element(
             "body",
@@ -279,6 +342,7 @@ class DualUR5LowFillEnv:
             "site",
             {"name": "bag_frame_origin", "pos": "0 0 0", "size": "0.006", "rgba": "0.8 0.15 0.15 1"},
         )
+        self._add_graspable_band(bag_frame)
 
         flexcomp = ET.SubElement(
             bag_frame,
@@ -415,12 +479,12 @@ class DualUR5LowFillEnv:
         ET.SubElement(
             actuator,
             "position",
-            {"name": "left_finger_l_act", "joint": "left_finger_l", "ctrlrange": "0.006 0.040", "kp": "1800", "forcerange": "-200 200"},
+            {"name": "left_finger_l_act", "joint": "left_finger_l", "ctrlrange": "0.010 0.080", "kp": "450", "forcerange": "-60 60"},
         )
         ET.SubElement(
             actuator,
             "position",
-            {"name": "left_finger_r_act", "joint": "left_finger_r", "ctrlrange": "0.006 0.040", "kp": "1800", "forcerange": "-200 200"},
+            {"name": "left_finger_r_act", "joint": "left_finger_r", "ctrlrange": "0.010 0.080", "kp": "450", "forcerange": "-60 60"},
         )
 
         ET.indent(root, space="  ")
@@ -592,6 +656,7 @@ class DualUR5LowFillEnv:
         print(f"mujoco_version={getattr(mujoco, '__version__', 'unknown')}")
         print(f"left_gripper_site={np.round(self.site_pos('left_gripper_pinch'), 4).tolist()}")
         print(f"right_scoop_site={np.round(self.site_pos('right_scoop_site'), 4).tolist()}")
+        print(f"bag_grasp_site_count={len(self.grasp_site_names())}")
         print(f"bag_shell_body_count={len(collect_shell_body_ids(self.model))}")
 
     def site_pos(self, site_name: str) -> np.ndarray:
@@ -599,6 +664,15 @@ class DualUR5LowFillEnv:
         if site_id < 0:
             raise KeyError(f"site not found: {site_name}")
         return self.data.site_xpos[site_id].copy()
+
+    def grasp_site_names(self) -> list[str]:
+        return [f"bag_grasp_site_{index:02d}" for index in range(GRASP_BAND_SEGMENTS)]
+
+    def nearest_grasp_site_name(self, reference_xyz: np.ndarray) -> str:
+        reference_xyz = np.asarray(reference_xyz, dtype=np.float64)
+        site_names = self.grasp_site_names()
+        distances = [float(np.linalg.norm(self.site_pos(site_name) - reference_xyz)) for site_name in site_names]
+        return site_names[int(np.argmin(distances))]
 
 
 class KeyboardJointStepper:
