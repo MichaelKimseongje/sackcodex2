@@ -58,11 +58,11 @@ ROBOTIQ_2F140_MIN_GAP_M = 0.004
 TOP_CENTER_SITE = f"site_top_seam_{TOP_SEAM_COUNT // 2:02d}"
 TOP_RAIL_SITE = "site_top_grasp_rail_center"
 PANEL_CENTER_INDEX = TOP_SEAM_COUNT // 2
-LOWER_LEFT_SITE = f"site_outer_lower_left_{PANEL_CENTER_INDEX:02d}"
-LOWER_RIGHT_SITE = f"site_outer_lower_right_{PANEL_CENTER_INDEX:02d}"
-BOTTOM_CENTER_SITE = "site_outer_bottom_edge_center"
-SHOULDER_CENTER_SITE_LEFT = f"site_outer_upper_left_{PANEL_CENTER_INDEX:02d}"
-SHOULDER_CENTER_SITE_RIGHT = f"site_outer_upper_right_{PANEL_CENTER_INDEX:02d}"
+LOWER_LEFT_SITE = f"site_lower_left_{PANEL_CENTER_INDEX:02d}"
+LOWER_RIGHT_SITE = f"site_lower_right_{PANEL_CENTER_INDEX:02d}"
+BOTTOM_CENTER_SITE = "site_bottom_center"
+SHOULDER_CENTER_SITE_LEFT = f"site_upper_left_{PANEL_CENTER_INDEX:02d}"
+SHOULDER_CENTER_SITE_RIGHT = f"site_upper_right_{PANEL_CENTER_INDEX:02d}"
 
 
 @dataclass
@@ -112,7 +112,7 @@ class DualSackUR5Env:
         self.show_site_frames = True
         self.show_body_frames = False
         self.show_site_labels = False
-        self.show_transparent = True
+        self.show_transparent = False
         self.contact_patch_monitor_enabled = True
         self.active_compliant_patch_count = 0
         self.active_compliant_joint_count = 0
@@ -168,11 +168,10 @@ class DualSackUR5Env:
     def _build_adaptive_joint_baseline(self) -> dict[str, AdaptiveJointBaseline]:
         prefixes = (
             "top_grasp_rail_",
-            "top_seam_",
-            "outer_upper_",
-            "outer_mid_",
-            "outer_lower_",
-            "outer_bottom_edge_",
+            "top_seam_band_",
+            "upper_",
+            "lower_",
+            "bottom_",
             "top_edge_occlusion_",
         )
         baseline: dict[str, AdaptiveJointBaseline] = {}
@@ -204,17 +203,15 @@ class DualSackUR5Env:
     def _build_patch_site_joint_map(self) -> dict[str, list[str]]:
         mapping: dict[str, list[str]] = {}
         for i in range(TOP_SEAM_COUNT):
-            self._add_patch_site(mapping, f"site_top_seam_{i:02d}", [f"top_seam_{i:02d}_hinge"])
+            self._add_patch_site(mapping, f"site_top_seam_{i:02d}", [f"top_seam_band_{i:02d}_hinge"])
         self._add_patch_site(mapping, TOP_RAIL_SITE, ["top_grasp_rail_pitch"])
         for side in ("left", "right"):
-            mid_prefix = "front" if side == "left" else "back"
             for i in range(TOP_SEAM_COUNT):
-                self._add_patch_site(mapping, f"site_outer_upper_{side}_{i:02d}", [f"outer_upper_{side}_{i:02d}_hinge"])
-                self._add_patch_site(mapping, f"site_outer_shoulder_{side}_{i:02d}", [f"outer_upper_{side}_{i:02d}_hinge"])
-                self._add_patch_site(mapping, f"site_outer_mid_{mid_prefix}_{i:02d}", [f"outer_mid_{mid_prefix}_{i:02d}_hinge"])
-                self._add_patch_site(mapping, f"site_outer_lower_{side}_{i:02d}", [f"outer_lower_{side}_{i:02d}_hinge"])
-                self._add_patch_site(mapping, f"site_outer_bottom_edge_{side}_{i:02d}", [f"outer_bottom_edge_{side}_{i:02d}_hinge"])
-        self._add_patch_site(mapping, BOTTOM_CENTER_SITE, ["outer_bottom_edge_center_hinge"])
+                self._add_patch_site(mapping, f"site_upper_{side}_{i:02d}", [f"upper_{side}_{i:02d}_hinge"])
+                self._add_patch_site(mapping, f"site_shoulder_{side}_{i:02d}", [f"upper_{side}_{i:02d}_hinge"])
+                self._add_patch_site(mapping, f"site_lower_{side}_{i:02d}", [f"lower_{side}_{i:02d}_hinge"])
+                self._add_patch_site(mapping, f"site_bottom_edge_{side}_{i:02d}", [f"bottom_{i:02d}_hinge"])
+        self._add_patch_site(mapping, BOTTOM_CENTER_SITE, [f"bottom_{PANEL_CENTER_INDEX:02d}_hinge"])
         self._add_patch_site(mapping, "site_top_edge_occlusion_left", ["top_edge_occlusion_left_hinge"])
         self._add_patch_site(mapping, "site_top_edge_occlusion_right", ["top_edge_occlusion_right_hinge"])
         return mapping
@@ -294,9 +291,9 @@ class DualSackUR5Env:
                 LOWER_LEFT_SITE,
                 LOWER_RIGHT_SITE,
                 BOTTOM_CENTER_SITE,
-                f"site_outer_bottom_edge_left_{PANEL_CENTER_INDEX:02d}",
-                f"site_outer_bottom_edge_right_{PANEL_CENTER_INDEX:02d}",
-                *[f"site_inner_bottom_load_{i:02d}" for i in range(INNER_BOTTOM_PANEL_COUNT)],
+                f"site_bottom_edge_left_{PANEL_CENTER_INDEX:02d}",
+                f"site_bottom_edge_right_{PANEL_CENTER_INDEX:02d}",
+                *[f"site_inner_bottom_{i:02d}" for i in range(INNER_BOTTOM_PANEL_COUNT)],
             )
         }
         self.update_contact_adaptive_compliance()
@@ -328,11 +325,10 @@ class DualSackUR5Env:
         pad_tokens = ("robotiq_2f140_left_pad", "robotiq_2f140_right_pad")
         bag_tokens = (
             "top_grasp_rail",
-            "top_seam_",
-            "outer_upper_",
-            "outer_mid_",
-            "outer_lower_",
-            "outer_bottom_edge_",
+            "top_seam_band_",
+            "upper_",
+            "lower_",
+            "bottom_",
             "top_edge_occlusion_",
         )
         for i in range(self.data.ncon):
@@ -452,8 +448,8 @@ class DualSackUR5Env:
     def nearest_grasp_site(self, reference_xyz: np.ndarray) -> tuple[str, np.ndarray]:
         names = [f"site_top_seam_{i:02d}" for i in range(TOP_SEAM_COUNT)]
         names += ["site_top_edge_occlusion_left", "site_top_edge_occlusion_right"]
-        names += [f"site_outer_upper_left_{i:02d}" for i in range(TOP_SEAM_COUNT)]
-        names += [f"site_outer_upper_right_{i:02d}" for i in range(TOP_SEAM_COUNT)]
+        names += [f"site_upper_left_{i:02d}" for i in range(TOP_SEAM_COUNT)]
+        names += [f"site_upper_right_{i:02d}" for i in range(TOP_SEAM_COUNT)]
         candidates: list[tuple[float, str, np.ndarray]] = []
         for name in names:
             try:
@@ -475,13 +471,13 @@ class DualSackUR5Env:
         belly_opening = 1000.0 * abs(float(np.linalg.norm(left - right) - np.linalg.norm(left0 - right0)))
         bottom_drop = 1000.0 * max(0.0, float(self._initial_site_pos[BOTTOM_CENTER_SITE][2] - self.site_pos(BOTTOM_CENTER_SITE)[2]))
         for i in range(INNER_BOTTOM_PANEL_COUNT):
-            name = f"site_inner_bottom_load_{i:02d}"
+            name = f"site_inner_bottom_{i:02d}"
             if name in self._initial_site_pos:
                 bottom_drop = max(bottom_drop, 1000.0 * max(0.0, float(self._initial_site_pos[name][2] - self.site_pos(name)[2])))
         bottom_rollup = 0.0
         for name in (
-            f"site_outer_bottom_edge_left_{PANEL_CENTER_INDEX:02d}",
-            f"site_outer_bottom_edge_right_{PANEL_CENTER_INDEX:02d}",
+            f"site_bottom_edge_left_{PANEL_CENTER_INDEX:02d}",
+            f"site_bottom_edge_right_{PANEL_CENTER_INDEX:02d}",
         ):
             if name in self._initial_site_pos:
                 bottom_rollup = max(bottom_rollup, 1000.0 * max(0.0, float(self.site_pos(name)[2] - self._initial_site_pos[name][2])))
@@ -515,7 +511,7 @@ class DualSackUR5Gui:
         self.show_site_frames_var = tk.BooleanVar(value=True)
         self.show_body_frames_var = tk.BooleanVar(value=False)
         self.show_site_labels_var = tk.BooleanVar(value=False)
-        self.show_transparent_var = tk.BooleanVar(value=True)
+        self.show_transparent_var = tk.BooleanVar(value=False)
         self.contact_patch_monitor_var = tk.BooleanVar(value=True)
         self.pause_var = tk.BooleanVar(value=False)
         self.gripper_var = tk.DoubleVar(value=ROBOTIQ_2F140_MAX_GAP_M * 1000.0)

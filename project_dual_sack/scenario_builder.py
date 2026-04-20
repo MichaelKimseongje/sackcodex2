@@ -18,7 +18,7 @@ SACK_LENGTH = 0.420
 SACK_WIDTH = 0.240
 SACK_THICKNESS = 0.150
 SACK_Z = 0.105
-TOP_SEAM_COUNT = 11
+TOP_SEAM_COUNT = 5
 CONNECTED_COLUMN_COUNT = 7
 CONNECTED_LAYER_COUNT = 3
 CONNECTED_BOTTOM_SEGMENT_COUNT = 5
@@ -31,7 +31,7 @@ OUTER_BOTTOM_EDGE_COUNT = 7
 SHOULDER_PANEL_COUNT = OUTER_SHOULDER_COUNT
 LOWER_BELLY_PANEL_COUNT = OUTER_LOWER_COUNT
 INNER_LOAD_PANEL_COUNT = 5
-INNER_BOTTOM_PANEL_COUNT = 3
+INNER_BOTTOM_PANEL_COUNT = 5
 UR5E_ASSET_DIR = Path(r"D:\Michael\2025\01.Research\01.Parceldetection\16.Pybullet\mujoco_menagerie\universal_robots_ur5e\assets")
 UR5E_MESH_FILES = (
     "base_0.obj",
@@ -58,6 +58,7 @@ UR5E_MESH_FILES = (
 
 SCENARIO_NAMES = (
     "baseline_filled",
+    "empty_collapsed",
     "underfilled",
     "top_fold_simple",
     "top_fold_severe",
@@ -87,6 +88,8 @@ class ScenarioState:
     payload_main_pos: tuple[float, float, float] = (0.0, 0.0, -0.006)
     payload_aux_pos: tuple[float, float, float] = (0.0, 0.0, -0.004)
     payload_aux_mass: float = 0.04
+    fill_volume_scale: float = 1.0
+    ballast_mass_scale: float = 1.0
     visual_bulge_y: float = 0.0
     body_tilt_deg: float = 0.0
     neighbor_gap: float = 0.35
@@ -99,8 +102,26 @@ class ScenarioState:
 SCENARIOS: dict[str, ScenarioState] = {
     "baseline_filled": ScenarioState(
         name="baseline_filled",
+        fill_volume_scale=1.0,
         shoulder_stiffness=4.2,
         description="대칭적인 밀봉 쌀포대/밀가루포대 기준 형상",
+    ),
+    "empty_collapsed": ScenarioState(
+        name="empty_collapsed",
+        top_width_scale=0.94,
+        lower_width_scale=0.62,
+        top_crown_scale=0.34,
+        lower_bulge_scale=0.24,
+        shoulder_rest_deg=-28.0,
+        shoulder_stiffness=0.18,
+        belly_rest_deg=-20.0,
+        belly_stiffness=0.35,
+        payload_main_pos=(0.0, 0.0, -0.052),
+        payload_aux_pos=(0.0, 0.0, -0.052),
+        payload_aux_mass=0.002,
+        fill_volume_scale=0.05,
+        ballast_mass_scale=0.04,
+        description="internal support removed; collapsed sealed sack reference",
     ),
     "underfilled": ScenarioState(
         name="underfilled",
@@ -108,6 +129,7 @@ SCENARIOS: dict[str, ScenarioState] = {
         lower_width_scale=1.08,
         top_crown_scale=0.62,
         lower_bulge_scale=1.15,
+        fill_volume_scale=0.62,
         shoulder_rest_deg=-18.0,
         shoulder_stiffness=0.35,
         belly_rest_deg=8.0,
@@ -181,6 +203,13 @@ def _fmt(values: tuple[float, ...] | list[float]) -> str:
 
 def _rad(deg: float) -> float:
     return math.radians(float(deg))
+
+
+def _fill_geometry_scale(state: ScenarioState) -> tuple[float, float]:
+    """내부 지지량을 외피 폭/높이에 반영하기 위한 scale입니다."""
+    fill = max(0.0, min(1.25, state.fill_volume_scale))
+    height_scale = 0.32 + 0.68 * fill
+    return fill, height_scale
 
 
 def _geom(parent: ET.Element, **attrib: str) -> ET.Element:
@@ -267,17 +296,60 @@ def _make_visual_skin_mesh(state: ScenarioState) -> tuple[str, str]:
     return vertex, face
 
 
+def _make_longitudinal_end_cap_mesh(state: ScenarioState) -> tuple[str, str]:
+    """길이 방향 끝단을 막는 visual-only pillow end-cap mesh입니다."""
+    fill, height_scale = _fill_geometry_scale(state)
+    top_z = 0.018 + 0.5 * SACK_THICKNESS * state.top_crown_scale * height_scale
+    # 앞/뒤 판은 top seam에서 하단 edge로 내려가며 바깥쪽으로 벌어지는 사선 판입니다.
+    top_y = (0.18 + 0.06 * fill) * SACK_WIDTH * state.top_width_scale
+    lower_y = (0.26 + 0.20 * fill) * SACK_WIDTH * state.lower_width_scale
+    shell_h = 0.138 * (0.92 + 0.08 * state.lower_bulge_scale) * height_scale
+    bottom_z = top_z - shell_h
+    half_x = 0.005
+    yz = [
+        (-top_y, top_z),
+        (top_y, top_z),
+        (lower_y, bottom_z),
+        (-lower_y, bottom_z),
+    ]
+    verts: list[tuple[float, float, float]] = []
+    for x in (-half_x, half_x):
+        for y, z in yz:
+            verts.append((x, y, z))
+
+    faces: list[tuple[int, int, int]] = []
+    # end-cap 앞/뒤 polygon을 fan triangulation으로 닫습니다.
+    for base, reverse in ((0, False), (len(yz), True)):
+        for i in range(1, len(yz) - 1):
+            tri = (base, base + i, base + i + 1)
+            faces.append((tri[0], tri[2], tri[1]) if reverse else tri)
+    # 얇은 두께의 side wall을 닫습니다.
+    n = len(yz)
+    for i in range(n):
+        j = (i + 1) % n
+        a, b, c, d = i, j, n + i, n + j
+        faces.extend(((a, b, c), (b, d, c)))
+
+    vertex = " ".join(f"{x:.6f} {y:.6f} {z:.6f}" for x, y, z in verts)
+    face = " ".join(f"{a} {b} {c}" for a, b, c in faces)
+    return vertex, face
+
+
 def _add_assets(root: ET.Element, state: ScenarioState, *, include_robots: bool) -> None:
     asset = ET.SubElement(root, "asset")
     vertex, face = _make_visual_skin_mesh(state)
     ET.SubElement(asset, "mesh", {"name": "sealed_pillow_skin_mesh", "vertex": vertex, "face": face})
-    ET.SubElement(asset, "material", {"name": "mat_jute", "rgba": "0.72 0.58 0.36 0.22"})
-    ET.SubElement(asset, "material", {"name": "mat_shell_panel", "rgba": "0.70 0.55 0.31 0.94"})
-    ET.SubElement(asset, "material", {"name": "mat_connected_shell", "rgba": "0.74 0.61 0.40 0.97"})
-    ET.SubElement(asset, "material", {"name": "mat_connected_edge", "rgba": "0.46 0.32 0.17 0.96"})
+    end_vertex, end_face = _make_longitudinal_end_cap_mesh(state)
+    ET.SubElement(asset, "mesh", {"name": "longitudinal_end_cap_mesh", "vertex": end_vertex, "face": end_face})
+    ET.SubElement(asset, "material", {"name": "mat_jute", "rgba": "0.72 0.58 0.36 0.36"})
+    ET.SubElement(asset, "material", {"name": "mat_shell_panel", "rgba": "0.70 0.55 0.31 1.00"})
+    ET.SubElement(asset, "material", {"name": "mat_connected_shell", "rgba": "0.74 0.61 0.40 1.00"})
+    ET.SubElement(asset, "material", {"name": "mat_connected_edge", "rgba": "0.46 0.32 0.17 1.00"})
+    ET.SubElement(asset, "material", {"name": "mat_front_back_panel", "rgba": "0.70 0.82 0.96 0.96"})
+    ET.SubElement(asset, "material", {"name": "mat_side_panel", "rgba": "0.72 0.70 0.95 0.96"})
     ET.SubElement(asset, "material", {"name": "mat_panel_hidden", "rgba": "0.70 0.55 0.31 0.94"})
-    ET.SubElement(asset, "material", {"name": "mat_hinge_cylinder", "rgba": "0.43 0.28 0.13 0.95"})
-    ET.SubElement(asset, "material", {"name": "mat_seam", "rgba": "0.34 0.22 0.10 0.88"})
+    ET.SubElement(asset, "material", {"name": "mat_hinge_cylinder", "rgba": "0.43 0.28 0.13 1.00"})
+    ET.SubElement(asset, "material", {"name": "mat_seam", "rgba": "0.34 0.22 0.10 1.00"})
     ET.SubElement(asset, "material", {"name": "mat_fold", "rgba": "0.66 0.46 0.22 0.82"})
     ET.SubElement(asset, "material", {"name": "mat_inner_shell", "rgba": "0.18 0.42 0.78 0.34"})
     ET.SubElement(asset, "material", {"name": "mat_ballast", "rgba": "0.30 0.13 0.06 0.26"})
@@ -308,6 +380,7 @@ def _add_world(worldbody: ET.Element) -> None:
     ET.SubElement(worldbody, "light", {"name": "fill_light", "pos": "-0.6 0.5 0.9", "dir": "0.4 -0.2 -1", "diffuse": "0.35 0.32 0.28"})
     ET.SubElement(worldbody, "camera", {"name": "front", "pos": "0.58 -0.66 0.32", "xyaxes": "0.76 0.65 0 -0.20 0.23 0.95"})
     ET.SubElement(worldbody, "camera", {"name": "side", "pos": "0.78 0.00 0.25", "xyaxes": "0 1 0 -0.18 0 0.98"})
+    ET.SubElement(worldbody, "camera", {"name": "longitudinal_end", "pos": "0.70 0.00 0.20", "xyaxes": "0 1 0 -0.16 0 0.99"})
     ET.SubElement(worldbody, "camera", {"name": "top_angle", "pos": "0.38 -0.48 0.58", "xyaxes": "0.78 0.62 0 -0.50 0.63 0.59"})
     ET.SubElement(worldbody, "camera", {"name": "dual", "pos": "1.95 -2.35 1.25", "xyaxes": "0.78 0.63 0 -0.35 0.43 0.83", "fovy": "75"})
 
@@ -318,12 +391,31 @@ def _add_visual_skin(bag: ET.Element, state: ScenarioState) -> None:
     cap_z = 0.5 * SACK_THICKNESS * state.top_crown_scale + 0.006
     cap = ET.SubElement(skin, "body", {"name": "sealed_top_cap_visual", "pos": f"0 0 {cap_z:.6f}"})
     _geom(cap, name="sealed_top_cap_visual_geom", type="box", size=f"{0.28*SACK_LENGTH:.6f} {0.030*SACK_WIDTH:.6f} 0.0025", group="3", rgba="0.50 0.34 0.16 0.18", contype="0", conaffinity="0", mass="0.001")
+    # 길이 방향 양 끝이 열린 단면처럼 보이지 않도록 visual-only end cap을 둡니다.
+    # 물리 계산에는 관여하지 않지만 outer_shell_only 렌더에는 포함됩니다.
+    # 길이 방향 끝단을 실제 외피 끝까지 닫아야 side/end view에서 빈 공간처럼 보이지 않습니다.
+    end_cap_x = 0.50 * SACK_LENGTH
+    for cap_name, x_sign in (("left_end_cap_visual", -1.0), ("right_end_cap_visual", 1.0)):
+        end_cap = ET.SubElement(skin, "body", {"name": cap_name, "pos": f"{x_sign * end_cap_x:.6f} 0 0"})
+        _geom(
+            end_cap,
+            name=f"{cap_name}_geom",
+            type="mesh",
+            mesh="longitudinal_end_cap_mesh",
+            material="mat_side_panel",
+            group="1",
+            rgba="0.72 0.70 0.95 0.92",
+            contype="0",
+            conaffinity="0",
+            mass="0.001",
+        )
+        ET.SubElement(end_cap, "site", {"name": f"site_{cap_name}", "pos": "0 0 0", "size": "0.0008", "rgba": "1 0.9 0.2 0.00"})
     # 프린트/봉합 cue는 물리에 쓰지 않고 top opening처럼 보이는 것을 막는 시각 요소입니다.
     mark = ET.SubElement(skin, "body", {"name": "visual_print_mark", "pos": "-0.04 -0.01 0.044", "euler": "0 0 -4"})
     _geom(mark, name="visual_print_mark_geom", type="box", size="0.055 0.007 0.001", group="3", rgba="0.07 0.06 0.05 0.18", contype="0", conaffinity="0", mass="0.001")
 
 
-def _add_hinge_locked_outer_shell(bag: ET.Element, state: ScenarioState) -> None:
+def _legacy_add_hinge_locked_outer_shell_11_column(bag: ET.Element, state: ScenarioState) -> None:
     """힌지-잠금형 visible outer shell입니다.
 
     각 판 geom은 자기 body에 고정되고, body에는 hinge joint만 둡니다.
@@ -1027,7 +1119,7 @@ def _add_twin_outer_bottom_edge(bag: ET.Element, state: ScenarioState) -> None:
     ET.SubElement(group, "site", {"name": "site_outer_bottom_edge_center", "pos": "0 0 -0.064", "size": "0.0005", "rgba": "1 0.3 0.1 0.00"})
 
 
-def _add_twin_inner_load_shell(bag: ET.Element, state: ScenarioState) -> None:
+def _legacy_add_twin_inner_load_shell_strip(bag: ET.Element, state: ScenarioState) -> None:
     root = ET.SubElement(bag, "body", {"name": "hidden_inner_load_shell", "pos": f"0 {_scenario_lateral_bias(state):.6f} {_scenario_vertical_bias(state):.6f}"})
     for side_name, ysign in (("front", -1.0), ("back", 1.0)):
         group = ET.SubElement(root, "body", {"name": f"inner_{side_name}_load_shell", "pos": "0 0 0"})
@@ -1048,8 +1140,12 @@ def _add_twin_inner_load_shell(bag: ET.Element, state: ScenarioState) -> None:
 
 
 def _add_twin_ballast_masses(bag: ET.Element, state: ScenarioState) -> None:
+    fill, _height_scale = _fill_geometry_scale(state)
+    size_scale = max(0.12, fill ** (1.0 / 3.0))
+    mass_scale = max(0.025, state.ballast_mass_scale)
+    ballast_alpha = 0.34 if fill > 0.15 else 0.07
     y_bias = 0.050 if state.name == "eccentric_fill" else 0.0
-    z_bias = -0.026 if state.name in ("underfilled", "post_separation_sag") else -0.006
+    z_bias = -0.038 if state.name == "empty_collapsed" else (-0.026 if state.name in ("underfilled", "post_separation_sag") else -0.006)
     main_x, main_y, main_z = state.payload_main_pos
     aux_x, aux_y, aux_z = state.payload_aux_pos
     specs = (
@@ -1062,7 +1158,17 @@ def _add_twin_ballast_masses(bag: ET.Element, state: ScenarioState) -> None:
         body = ET.SubElement(bag, "body", {"name": name, "pos": _fmt(pos)})
         for axis_name, axis, limit in (("x", "1 0 0", "-0.110 0.110"), ("y", "0 1 0", "-0.135 0.135"), ("z", "0 0 1", "-0.105 0.045")):
             _joint(body, name=f"{name}_{axis_name}", type="slide", axis=axis, range=limit, springref="0", stiffness="0.26", damping="2.4")
-        _geom(body, name=f"{name}_geom", type="ellipsoid", size=_fmt(size), material="mat_ballast", group="4", mass=f"{mass:.4f}")
+        scaled_size = tuple(max(0.004, value * size_scale) for value in size)
+        _geom(
+            body,
+            name=f"{name}_geom",
+            type="ellipsoid",
+            size=_fmt(scaled_size),
+            material="mat_ballast",
+            rgba=f"0.82 0.13 0.10 {ballast_alpha:.3f}",
+            group="4",
+            mass=f"{max(0.002, mass * mass_scale):.4f}",
+        )
         ET.SubElement(body, "site", {"name": f"site_{name}", "pos": "0 0 0", "size": "0.001", "rgba": "0.6 0 0.6 0.00"})
 
 
@@ -1109,6 +1215,333 @@ def _add_neighbors_and_support(worldbody: ET.Element, state: ScenarioState) -> N
     )
 
 
+def _add_hinge_locked_outer_shell(bag: ET.Element, state: ScenarioState) -> None:
+    """5-slice cross-section 기반 quasi-rigid visible outer shell입니다.
+
+    기존 11-column strip shell을 쓰지 않고, attached diagram처럼 길이 방향 5개 단면을
+    top / upper-left / upper-right / lower-left / lower-right / bottom panel로 구성합니다.
+    """
+
+    root = ET.SubElement(bag, "body", {"name": "visible_articulated_outer_shell", "pos": "0 0 0"})
+    slice_labels = ("left_end", "left_mid", "center", "right_mid", "right_end")
+    candidate_labels = ("left", "left_center", "center", "right_center", "right")
+    slice_count = TOP_SEAM_COUNT
+    slice_span = 0.80 * SACK_LENGTH
+    slice_dx = slice_span / max(1, slice_count - 1)
+    slice_half_x = 0.60 * slice_dx
+    fill, height_scale = _fill_geometry_scale(state)
+    top_z = 0.018 + 0.5 * SACK_THICKNESS * state.top_crown_scale * height_scale
+    # 앞/뒤 파란 판은 top seam에서 하단 edge로 사선으로 내려가야 상자처럼 보이지 않습니다.
+    top_y = (0.18 + 0.06 * fill) * SACK_WIDTH * state.top_width_scale
+    lower_y = (0.26 + 0.20 * fill) * SACK_WIDTH * state.lower_width_scale
+    upper_h = 0.138 * (0.92 + 0.08 * state.lower_bulge_scale) * height_scale
+    lower_h = 0.004
+    shoulder_stiff = max(0.006, state.shoulder_stiffness * 0.070)
+    lower_stiff = max(0.020, state.belly_stiffness * 0.032)
+    bottom_stiff = 0.026 if state.name == "post_separation_sag" else 0.052
+
+    def panel(
+        parent: ET.Element,
+        *,
+        name: str,
+        pos: tuple[float, float, float],
+        size: tuple[float, float, float],
+        mass: float,
+        material: str = "mat_connected_shell",
+        euler: tuple[float, float, float] | None = None,
+    ) -> None:
+        attrib = {
+            "name": name,
+            "type": "box",
+            "pos": _fmt(pos),
+            "size": _fmt(size),
+            "material": material,
+            "group": "1",
+            "mass": f"{mass:.4f}",
+            "contype": "2",
+            "conaffinity": "5",
+            "friction": "1.45 0.06 0.006",
+            "condim": "4",
+        }
+        if euler is not None:
+            attrib["euler"] = _fmt(euler)
+        _geom(parent, **attrib)
+
+    def sloped_panel(
+        parent: ET.Element,
+        *,
+        name: str,
+        signed_dy: float,
+        dz_down: float,
+        half_x: float,
+        thickness: float,
+        mass: float,
+        material: str = "mat_connected_shell",
+    ) -> None:
+        length = math.sqrt(signed_dy * signed_dy + dz_down * dz_down)
+        angle_deg = math.degrees(math.atan2(signed_dy, dz_down))
+        panel(
+            parent,
+            name=name,
+            pos=(0.0, 0.5 * signed_dy, -0.5 * dz_down),
+            size=(half_x, thickness, 0.5 * length),
+            mass=mass,
+            material=material,
+            euler=(angle_deg, 0.0, 0.0),
+        )
+
+    def hinge_body(
+        parent: ET.Element,
+        *,
+        body_name: str,
+        joint_name: str,
+        pos: tuple[float, float, float],
+        axis: str,
+        range_deg: tuple[float, float],
+        springref_deg: float,
+        stiffness: float,
+        damping: float,
+    ) -> ET.Element:
+        body = ET.SubElement(parent, "body", {"name": body_name, "pos": _fmt(pos)})
+        _joint(
+            body,
+            name=joint_name,
+            type="hinge",
+            axis=axis,
+            range=f"{range_deg[0]:.3f} {range_deg[1]:.3f}",
+            springref=f"{_rad(springref_deg):.6f}",
+            stiffness=f"{stiffness:.5f}",
+            damping=f"{damping:.5f}",
+        )
+        return body
+
+    rail = hinge_body(
+        root,
+        body_name="top_grasp_rail",
+        joint_name="top_grasp_rail_pitch",
+        pos=(0.0, 0.0, top_z),
+        axis="0 1 0",
+        range_deg=(-28.0, 28.0),
+        springref_deg=0.0,
+        stiffness=0.070,
+        damping=0.50,
+    )
+    _geom(
+        rail,
+        name="top_grasp_rail_geom",
+        type="capsule",
+        fromto=f"{-0.43*SACK_LENGTH:.6f} 0 0 {0.43*SACK_LENGTH:.6f} 0 0",
+        size="0.0080",
+        material="mat_seam",
+        group="1",
+        mass="0.035",
+        contype="2",
+        conaffinity="5",
+        friction="1.55 0.08 0.008",
+        condim="4",
+    )
+    _hinge_capsule(
+        rail,
+        name="joint_axis_top_grasp_rail_pitch",
+        fromto=f"0 {-0.070*SACK_WIDTH:.6f} 0.013 0 {0.070*SACK_WIDTH:.6f} 0.013",
+        size=0.0048,
+    )
+    panel(
+        rail,
+        name="sealed_top_cap_cross_section_geom",
+        pos=(0.0, 0.0, 0.010),
+        size=(0.28 * SACK_LENGTH, 0.026, 0.0035),
+        mass=0.012,
+        material="mat_front_back_panel",
+    )
+    ET.SubElement(rail, "site", {"name": "site_top_grasp_rail_center", "pos": "0 0 0.012", "size": "0.002", "rgba": "1 0.2 0.1 0.65"})
+
+    for i in range(slice_count):
+        x = -0.5 * slice_span + i * slice_dx
+        slice_root = ET.SubElement(rail, "body", {"name": f"slice_{i:02d}_{slice_labels[i]}", "pos": f"{x:.6f} 0 0"})
+        seam = hinge_body(
+            slice_root,
+            body_name=f"top_seam_band_{i:02d}",
+            joint_name=f"top_seam_band_{i:02d}_hinge",
+            pos=(0.0, 0.0, 0.002),
+            axis="0 1 0",
+            range_deg=(-36.0, 36.0),
+            springref_deg=0.0,
+            stiffness=0.085,
+            damping=0.46,
+        )
+        _hinge_capsule(
+            seam,
+            name=f"joint_axis_top_seam_band_{i:02d}",
+            fromto=f"{-0.42*slice_dx:.6f} 0 0.010 {0.42*slice_dx:.6f} 0 0.010",
+            size=0.0034,
+        )
+        panel(
+            seam,
+            name=f"top_seam_band_{i:02d}_geom",
+            pos=(0.0, 0.0, 0.004),
+            size=(0.52 * slice_dx, top_y, 0.004),
+            mass=0.010,
+            material="mat_front_back_panel",
+        )
+        ET.SubElement(seam, "site", {"name": f"site_top_seam_{i:02d}", "pos": "0 0 0.014", "size": "0.0008", "rgba": "0.1 0.35 1 0.00"})
+        ET.SubElement(seam, "site", {"name": f"site_top_seam_{candidate_labels[i]}", "pos": "0 0 0.017", "size": "0.0008", "rgba": "0.1 0.35 1 0.00"})
+
+        for side, ysign in (("left", 1.0), ("right", -1.0)):
+            upper = hinge_body(
+                seam,
+                body_name=f"upper_{side}_{i:02d}",
+                joint_name=f"upper_{side}_{i:02d}_hinge",
+                pos=(0.0, ysign * top_y, -0.004),
+                axis="1 0 0",
+                range_deg=(-48.0, 48.0),
+                springref_deg=state.shoulder_rest_deg * ysign,
+                stiffness=shoulder_stiff,
+                damping=0.18 if state.name == "underfilled" else 0.68,
+            )
+            _hinge_capsule(
+                upper,
+                name=f"joint_axis_upper_{side}_{i:02d}",
+                fromto=f"{-0.36*slice_dx:.6f} 0 0 {0.36*slice_dx:.6f} 0 0",
+                size=0.0040,
+            )
+            dy_upper = lower_y - top_y
+            sloped_panel(
+                upper,
+                name=f"upper_{side}_{i:02d}_geom",
+                signed_dy=ysign * dy_upper,
+                dz_down=upper_h,
+                half_x=slice_half_x,
+                thickness=0.0085,
+                mass=0.052,
+                material="mat_front_back_panel",
+            )
+            ET.SubElement(upper, "site", {"name": f"site_upper_{side}_{i:02d}", "pos": f"0 {ysign * dy_upper:.6f} {-upper_h:.6f}", "size": "0.0007", "rgba": "0.2 0.8 1 0.00"})
+            ET.SubElement(upper, "site", {"name": f"site_shoulder_{side}_{i:02d}", "pos": f"0 {ysign * 0.5 * dy_upper:.6f} {-0.5 * upper_h:.6f}", "size": "0.0007", "rgba": "0.2 0.8 1 0.00"})
+
+            lower = hinge_body(
+                upper,
+                body_name=f"lower_{side}_{i:02d}",
+                joint_name=f"lower_{side}_{i:02d}_hinge",
+                pos=(0.0, ysign * dy_upper, -upper_h),
+                axis="1 0 0",
+                range_deg=(-62.0, 62.0),
+                springref_deg=state.belly_rest_deg * ysign,
+                stiffness=lower_stiff,
+                damping=0.44,
+            )
+            _hinge_capsule(
+                lower,
+                name=f"joint_axis_lower_{side}_{i:02d}",
+                fromto=f"{-0.36*slice_dx:.6f} 0 0 {0.36*slice_dx:.6f} 0 0",
+                size=0.0038,
+            )
+            # lower body는 넓은 옆판이 아니라 하단 조인트/edge connector입니다.
+            panel(
+                lower,
+                name=f"lower_{side}_{i:02d}_geom",
+                pos=(0.0, 0.0, 0.0),
+                size=(slice_half_x, 0.0060, 0.0045),
+                mass=0.018,
+                material="mat_connected_edge",
+            )
+            ET.SubElement(lower, "site", {"name": f"site_lower_{side}_{i:02d}", "pos": "0 0 0", "size": "0.0007", "rgba": "0.2 0.8 1 0.00"})
+            ET.SubElement(lower, "site", {"name": f"site_bottom_edge_{side}_{i:02d}", "pos": "0 0 0", "size": "0.0007", "rgba": "1 0.5 0.1 0.00"})
+
+            if side == "left":
+                bottom = hinge_body(
+                    lower,
+                    body_name=f"bottom_{i:02d}",
+                    joint_name=f"bottom_{i:02d}_hinge",
+                    pos=(0.0, 0.0, 0.0),
+                    axis="1 0 0",
+                    range_deg=(-70.0, 70.0),
+                    springref_deg=-12.0 if state.name == "post_separation_sag" else 0.0,
+                    stiffness=bottom_stiff,
+                    damping=0.34,
+                )
+                _hinge_capsule(
+                    bottom,
+                    name=f"joint_axis_bottom_{i:02d}",
+                    fromto=f"{-0.36*slice_dx:.6f} 0 0 {0.36*slice_dx:.6f} 0 0",
+                    size=0.0038,
+                )
+                sloped_panel(
+                    bottom,
+                name=f"bottom_{i:02d}_geom",
+                signed_dy=-2.0 * lower_y,
+                dz_down=0.001,
+                half_x=slice_half_x,
+                thickness=0.0070,
+                mass=0.034,
+                material="mat_front_back_panel",
+            )
+                ET.SubElement(bottom, "site", {"name": f"site_bottom_{i:02d}", "pos": f"0 {-lower_y:.6f} -0.001", "size": "0.0007", "rgba": "1 0.5 0.1 0.00"})
+                if i == slice_count // 2:
+                    ET.SubElement(bottom, "site", {"name": "site_bottom_center", "pos": f"0 {-lower_y:.6f} -0.001", "size": "0.0008", "rgba": "1 0.5 0.1 0.00"})
+
+    # 보라색 옆판은 길이 방향 양 끝에 하나씩 둡니다. 각 판은 Y축 힌지로만 회전합니다.
+    for end_name, xsign in (("left", -1.0), ("right", 1.0)):
+        side_panel = hinge_body(
+            rail,
+            body_name=f"side_panel_{end_name}",
+            joint_name=f"side_panel_{end_name}_hinge",
+            pos=(xsign * 0.5 * slice_span, 0.0, -0.002),
+            axis="0 1 0",
+            range_deg=(-42.0, 42.0),
+            springref_deg=0.0,
+            stiffness=0.052,
+            damping=0.38,
+        )
+        _hinge_capsule(
+            side_panel,
+            name=f"joint_axis_side_panel_{end_name}",
+            fromto=f"0 {-lower_y:.6f} 0.008 0 {lower_y:.6f} 0.008",
+            size=0.0050,
+        )
+        panel(
+            side_panel,
+            name=f"side_panel_{end_name}_geom",
+            pos=(0.0, 0.0, -0.5 * upper_h),
+            size=(0.010, lower_y, 0.5 * upper_h),
+            mass=0.060,
+            material="mat_side_panel",
+        )
+        ET.SubElement(side_panel, "site", {"name": f"site_side_panel_{end_name}_center", "pos": f"0 0 {-0.5 * upper_h:.6f}", "size": "0.0007", "rgba": "0 1 1 0.00"})
+
+    ET.SubElement(root, "site", {"name": "site_side_left_center", "pos": f"{-0.5 * slice_span:.6f} 0 {-0.5 * upper_h:.6f}", "size": "0.0007", "rgba": "0 1 1 0.00"})
+    ET.SubElement(root, "site", {"name": "site_side_right_center", "pos": f"{0.5 * slice_span:.6f} 0 {-0.5 * upper_h:.6f}", "size": "0.0007", "rgba": "0 1 1 0.00"})
+    ET.SubElement(root, "site", {"name": "site_lower_left_center", "pos": f"0 {lower_y:.6f} {-upper_h:.6f}", "size": "0.0007", "rgba": "0.2 0.8 1 0.00"})
+    ET.SubElement(root, "site", {"name": "site_lower_right_center", "pos": f"0 {-lower_y:.6f} {-upper_h:.6f}", "size": "0.0007", "rgba": "0.2 0.8 1 0.00"})
+
+
+def _add_twin_inner_load_shell(bag: ET.Element, state: ScenarioState) -> None:
+    """5-slice hidden inner load shell입니다. 외형이 아니라 하중 경로와 sag를 담당합니다."""
+    root = ET.SubElement(bag, "body", {"name": "hidden_inner_load_shell", "pos": f"0 {_scenario_lateral_bias(state):.6f} {_scenario_vertical_bias(state):.6f}"})
+    slice_count = TOP_SEAM_COUNT
+    slice_span = 0.78 * SACK_LENGTH
+    slice_dx = slice_span / max(1, slice_count - 1)
+    x0 = -0.5 * slice_span
+    inner_upper_rest = -5.0 if state.name == "underfilled" else 0.0
+    inner_bottom_rest = -16.0 if state.name == "post_separation_sag" else -4.0
+    for i in range(slice_count):
+        x = x0 + i * slice_dx
+        upper = ET.SubElement(root, "body", {"name": f"inner_upper_{i:02d}", "pos": f"{x:.6f} 0 0.020"})
+        _joint(upper, name=f"inner_upper_{i:02d}_hinge", type="hinge", axis="0 1 0", range="-42 42", springref=f"{_rad(inner_upper_rest):.6f}", stiffness="0.095", damping="0.58")
+        _geom(upper, name=f"inner_upper_{i:02d}_geom", type="box", pos="0 0 -0.006", size=f"{0.48*slice_dx:.6f} 0.058 0.014", material="mat_inner_shell", group="2", contype="0", conaffinity="0", mass="0.045")
+        ET.SubElement(upper, "site", {"name": f"site_inner_upper_{i:02d}", "pos": "0 0 -0.018", "size": "0.0005", "rgba": "0 0.3 1 0.00"})
+
+        lower = ET.SubElement(root, "body", {"name": f"inner_lower_{i:02d}", "pos": f"{x:.6f} 0 -0.026"})
+        _joint(lower, name=f"inner_lower_{i:02d}_hinge", type="hinge", axis="0 1 0", range="-58 58", springref="0", stiffness="0.080", damping="0.54")
+        _geom(lower, name=f"inner_lower_{i:02d}_geom", type="box", pos="0 0 -0.006", size=f"{0.50*slice_dx:.6f} 0.072 0.018", material="mat_inner_shell", group="2", contype="0", conaffinity="0", mass="0.060")
+        ET.SubElement(lower, "site", {"name": f"site_inner_lower_{i:02d}", "pos": "0 0 -0.020", "size": "0.0005", "rgba": "0 0.3 1 0.00"})
+
+        bottom = ET.SubElement(root, "body", {"name": f"inner_bottom_{i:02d}", "pos": f"{x:.6f} 0 -0.072"})
+        _joint(bottom, name=f"inner_bottom_{i:02d}_hinge", type="hinge", axis="0 1 0", range="-75 75", springref=f"{_rad(inner_bottom_rest):.6f}", stiffness="0.060", damping="0.46")
+        _geom(bottom, name=f"inner_bottom_{i:02d}_geom", type="box", pos="0 0 -0.006", size=f"{0.50*slice_dx:.6f} 0.088 0.012", material="mat_inner_shell", group="2", contype="0", conaffinity="0", mass="0.075")
+        ET.SubElement(bottom, "site", {"name": f"site_inner_bottom_{i:02d}", "pos": "0 0 -0.018", "size": "0.0005", "rgba": "0 0.3 1 0.00"})
+
+
 def _add_bag(worldbody: ET.Element, state: ScenarioState) -> None:
     bag = ET.SubElement(worldbody, "body", {"name": "bag_frame", "pos": f"0 0 {SACK_Z:.6f}", "euler": f"{state.body_tilt_deg:.6f} 0 0"})
     ET.SubElement(bag, "freejoint", {"name": "bag_frame_freejoint"})
@@ -1121,7 +1554,7 @@ def _add_bag(worldbody: ET.Element, state: ScenarioState) -> None:
     _add_neighbors_and_support(worldbody, state)
 
 
-def _add_strap_tendons(root: ET.Element) -> None:
+def _legacy_add_strap_tendons_11_column(root: ET.Element) -> None:
     """저차 coordinated shape change를 만드는 약한 strap/tendon surrogate입니다."""
 
     tendon = ET.SubElement(root, "tendon")
@@ -1395,6 +1828,173 @@ def _add_strap_tendons(root: ET.Element) -> None:
     fixed("couple_occlusion_right_to_rail", [("top_edge_occlusion_right_hinge", 0.55), ("top_seam_02_hinge", 0.22)], 0.014, 0.012)
 
 
+def _add_strap_tendons(root: ET.Element) -> None:
+    """5-slice cross-section topology 전용 tendon/coupling입니다."""
+
+    tendon = ET.SubElement(root, "tendon")
+
+    def fixed(name: str, joints: list[tuple[str, float]], stiffness: float, damping: float) -> None:
+        item = ET.SubElement(tendon, "fixed", {"name": name, "springlength": "0", "stiffness": f"{stiffness:.4f}", "damping": f"{damping:.4f}"})
+        for joint_name, coef in joints:
+            ET.SubElement(item, "joint", {"joint": joint_name, "coef": f"{coef:.4f}"})
+
+    def angle_chain(name: str, joint_names: list[str], stiffness: float, damping: float) -> None:
+        for idx in range(len(joint_names) - 1):
+            fixed(f"chain_{name}_{idx:02d}", [(joint_names[idx], 1.0), (joint_names[idx + 1], -1.0)], stiffness, damping)
+
+    slices = range(TOP_SEAM_COUNT)
+    angle_chain("top_seam_band", [f"top_seam_band_{i:02d}_hinge" for i in slices], 0.040, 0.014)
+    angle_chain("bottom", [f"bottom_{i:02d}_hinge" for i in slices], 0.036, 0.012)
+    angle_chain("inner_upper", [f"inner_upper_{i:02d}_hinge" for i in slices], 0.026, 0.010)
+    angle_chain("inner_lower", [f"inner_lower_{i:02d}_hinge" for i in slices], 0.026, 0.010)
+    angle_chain("inner_bottom", [f"inner_bottom_{i:02d}_hinge" for i in slices], 0.030, 0.010)
+
+    for side in ("left", "right"):
+        angle_chain(f"upper_{side}", [f"upper_{side}_{i:02d}_hinge" for i in slices], 0.040, 0.014)
+        angle_chain(f"lower_{side}", [f"lower_{side}_{i:02d}_hinge" for i in slices], 0.038, 0.013)
+
+    for i in slices:
+        fixed(
+            f"mirror_upper_lr_s{i:02d}",
+            [(f"upper_left_{i:02d}_hinge", 0.34), (f"upper_right_{i:02d}_hinge", 0.34)],
+            0.018,
+            0.010,
+        )
+        fixed(
+            f"mirror_lower_lr_s{i:02d}",
+            [(f"lower_left_{i:02d}_hinge", 0.30), (f"lower_right_{i:02d}_hinge", 0.30)],
+            0.016,
+            0.010,
+        )
+        fixed(
+            f"couple_top_to_upper_left_s{i:02d}",
+            [(f"top_seam_band_{i:02d}_hinge", 0.28), (f"upper_left_{i:02d}_hinge", -0.24)],
+            0.024,
+            0.012,
+        )
+        fixed(
+            f"couple_top_to_upper_right_s{i:02d}",
+            [(f"top_seam_band_{i:02d}_hinge", 0.28), (f"upper_right_{i:02d}_hinge", 0.24)],
+            0.024,
+            0.012,
+        )
+        fixed(
+            f"couple_upper_to_lower_left_s{i:02d}",
+            [(f"upper_left_{i:02d}_hinge", 0.46), (f"lower_left_{i:02d}_hinge", -0.34)],
+            0.042,
+            0.014,
+        )
+        fixed(
+            f"couple_upper_to_lower_right_s{i:02d}",
+            [(f"upper_right_{i:02d}_hinge", 0.46), (f"lower_right_{i:02d}_hinge", -0.34)],
+            0.042,
+            0.014,
+        )
+        fixed(
+            f"bottom_to_lower_left_s{i:02d}",
+            [(f"bottom_{i:02d}_hinge", 0.50), (f"lower_left_{i:02d}_hinge", -0.25)],
+            0.028,
+            0.012,
+        )
+        fixed(
+            f"bottom_to_lower_right_s{i:02d}",
+            [(f"bottom_{i:02d}_hinge", 0.50), (f"lower_right_{i:02d}_hinge", 0.25)],
+            0.028,
+            0.012,
+        )
+        fixed(
+            f"outer_to_inner_upper_s{i:02d}",
+            [(f"top_seam_band_{i:02d}_hinge", 0.20), (f"inner_upper_{i:02d}_hinge", -0.30)],
+            0.012,
+            0.008,
+        )
+        fixed(
+            f"outer_to_inner_lower_s{i:02d}",
+            [(f"lower_left_{i:02d}_hinge", 0.16), (f"lower_right_{i:02d}_hinge", -0.16), (f"inner_lower_{i:02d}_hinge", -0.26)],
+            0.012,
+            0.008,
+        )
+        fixed(
+            f"inner_bottom_to_bottom_panel_s{i:02d}",
+            [(f"inner_bottom_{i:02d}_hinge", 0.42), (f"bottom_{i:02d}_hinge", -0.30)],
+            0.018,
+            0.010,
+        )
+
+    center = TOP_SEAM_COUNT // 2
+    fixed("couple_ballast_main_to_center_bottom", [("ballast_main_z", 0.56), (f"inner_bottom_{center:02d}_hinge", -0.28), (f"bottom_{center:02d}_hinge", -0.24)], 0.020, 0.012)
+    fixed("couple_ballast_aux1_to_side_bias", [("ballast_aux_1_y", 0.48), ("lower_left_04_hinge", -0.12), ("lower_right_04_hinge", 0.12), ("inner_lower_03_hinge", -0.12)], 0.012, 0.010)
+    fixed("couple_ballast_aux2_to_left_bottom", [("ballast_aux_2_z", 0.58), ("inner_bottom_01_hinge", -0.18), ("bottom_01_hinge", -0.16)], 0.014, 0.010)
+    fixed("couple_ballast_aux3_to_right_bottom", [("ballast_aux_3_z", 0.58), ("inner_bottom_03_hinge", -0.18), ("bottom_03_hinge", -0.16)], 0.014, 0.010)
+    fixed("couple_top_to_bottom_droplet_mode", [(f"top_seam_band_{center:02d}_hinge", 0.20), (f"inner_bottom_{center:02d}_hinge", -0.28), (f"bottom_{center:02d}_hinge", -0.30)], 0.018, 0.012)
+    fixed("couple_occlusion_left_to_rail", [("top_edge_occlusion_left_hinge", 0.55), ("top_seam_band_03_hinge", 0.22)], 0.014, 0.012)
+    fixed("couple_occlusion_right_to_rail", [("top_edge_occlusion_right_hinge", 0.55), ("top_seam_band_01_hinge", 0.22)], 0.014, 0.012)
+
+
+def _add_shell_loop_closure_equalities(root: ET.Element, state: ScenarioState) -> None:
+    """각 slice 단면의 panel 끝점이 벌어지지 않도록 부드러운 폐곡선 제약을 둡니다.
+
+    MuJoCo body hierarchy는 트리 구조라 한 panel을 좌/우 두 부모에 동시에 붙일 수 없습니다.
+    그래서 hinge tree로 1차 종속 관계를 만들고, 모든 맞닿는 edge에는 soft connect를 추가합니다.
+    """
+
+    equality = ET.SubElement(root, "equality")
+    slice_count = TOP_SEAM_COUNT
+    slice_span = 0.80 * SACK_LENGTH
+    slice_dx = slice_span / max(1, slice_count - 1)
+    fill, height_scale = _fill_geometry_scale(state)
+    top_z = 0.018 + 0.5 * SACK_THICKNESS * state.top_crown_scale * height_scale
+    top_y = (0.18 + 0.06 * fill) * SACK_WIDTH * state.top_width_scale
+    lower_y = (0.26 + 0.20 * fill) * SACK_WIDTH * state.lower_width_scale
+    upper_h = 0.138 * (0.92 + 0.08 * state.lower_bulge_scale) * height_scale
+    seam_joint_z = top_z - 0.002
+    lower_joint_z = seam_joint_z - upper_h
+    bottom_right_z = lower_joint_z - 0.001
+    tilt = math.radians(state.body_tilt_deg)
+    c, s = math.cos(tilt), math.sin(tilt)
+
+    def world_anchor(x: float, y: float, z: float) -> str:
+        wy = y * c - z * s
+        wz = y * s + z * c + SACK_Z
+        return f"{x:.6f} {wy:.6f} {wz:.6f}"
+
+    def connect(name: str, body1: str, body2: str, x: float, y: float, z: float, *, solref: str = "0.045 1.0") -> None:
+        ET.SubElement(
+            equality,
+            "connect",
+            {
+                "name": name,
+                "body1": body1,
+                "body2": body2,
+                "anchor": world_anchor(x, y, z),
+                "solref": solref,
+                "solimp": "0.86 0.96 0.0015",
+            },
+        )
+
+    for i in range(slice_count):
+        x = -0.5 * slice_span + i * slice_dx
+        # top seam과 좌/우 upper panel이 같은 hinge line을 공유하도록 닫습니다.
+        connect(f"loop_top_upper_left_{i:02d}", f"top_seam_band_{i:02d}", f"upper_left_{i:02d}", x, top_y, seam_joint_z)
+        connect(f"loop_top_upper_right_{i:02d}", f"top_seam_band_{i:02d}", f"upper_right_{i:02d}", x, -top_y, seam_joint_z)
+
+        # 긴 side panel과 하단 edge connector의 접합선입니다.
+        connect(f"loop_upper_lower_left_{i:02d}", f"upper_left_{i:02d}", f"lower_left_{i:02d}", x, lower_y, lower_joint_z)
+        connect(f"loop_upper_lower_right_{i:02d}", f"upper_right_{i:02d}", f"lower_right_{i:02d}", x, -lower_y, lower_joint_z)
+
+        # bottom panel은 lower_left tree에 매달고, 좌/우 edge 모두 soft closure로 폐곡선화합니다.
+        connect(f"loop_lower_bottom_left_{i:02d}", f"lower_left_{i:02d}", f"bottom_{i:02d}", x, lower_y, lower_joint_z, solref="0.035 1.0")
+        connect(f"loop_lower_bottom_right_{i:02d}", f"lower_right_{i:02d}", f"bottom_{i:02d}", x, -lower_y, bottom_right_z, solref="0.035 1.0")
+
+    # 길이 방향 양끝의 보라색 side panel도 앞/뒤/상/하 edge에 묶어 열린 끝단을 줄입니다.
+    for end_name, i in (("left", 0), ("right", slice_count - 1)):
+        x = -0.5 * slice_span + i * slice_dx
+        connect(f"loop_side_{end_name}_top_front", f"side_panel_{end_name}", f"upper_left_{i:02d}", x, lower_y, seam_joint_z, solref="0.040 1.0")
+        connect(f"loop_side_{end_name}_top_back", f"side_panel_{end_name}", f"upper_right_{i:02d}", x, -lower_y, seam_joint_z, solref="0.040 1.0")
+        connect(f"loop_side_{end_name}_bottom_front", f"side_panel_{end_name}", f"lower_left_{i:02d}", x, lower_y, lower_joint_z, solref="0.040 1.0")
+        connect(f"loop_side_{end_name}_bottom_back", f"side_panel_{end_name}", f"lower_right_{i:02d}", x, -lower_y, lower_joint_z, solref="0.040 1.0")
+
+
 def _add_ur5e_joint_marker(parent: ET.Element, *, name: str, radius: float = 0.026) -> None:
     _geom(
         parent,
@@ -1655,6 +2255,7 @@ def build_scene_tree(scenario: str = "baseline_filled", *, include_robots: bool 
     if include_robots:
         _add_dual_robots(worldbody)
     _add_strap_tendons(root)
+    _add_shell_loop_closure_equalities(root, state)
     _add_actuators(root, include_robots)
     ET.indent(root, space="  ")
     return root

@@ -8,7 +8,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from scenario_builder import OUT_DIR, SCENARIO_NAMES, get_scenario, write_scene_xml
+from scenario_builder import OUT_DIR, SCENARIO_NAMES, TOP_SEAM_COUNT, get_scenario, write_scene_xml
 
 
 SUMMARY_FIELDS = [
@@ -170,10 +170,11 @@ def _render_debug(model: mujoco.MjModel, data: mujoco.MjData, scenario: str, out
 
 
 def _shoulder_poke_test(model: mujoco.MjModel, data: mujoco.MjData) -> tuple[float, bool]:
-    left_site = "site_shoulder_left_01_tip"
-    right_site = "site_shoulder_right_01_tip"
-    left_body = _body_id(model, "shoulder_left_01")
-    right_body = _body_id(model, "shoulder_right_01")
+    center = TOP_SEAM_COUNT // 2
+    left_site = f"site_upper_left_{center:02d}"
+    right_site = f"site_upper_right_{center:02d}"
+    left_body = _body_id(model, f"upper_left_{center:02d}")
+    right_body = _body_id(model, f"upper_right_{center:02d}")
     left0 = _site_pos(model, data, left_site)
     right0 = _site_pos(model, data, right_site)
 
@@ -205,24 +206,31 @@ def _shoulder_poke_test(model: mujoco.MjModel, data: mujoco.MjData) -> tuple[flo
 
 
 def _top_preload_test(model: mujoco.MjModel, data: mujoco.MjData) -> float:
-    site = "site_top_seam_03"
-    body = _body_id(model, "top_seam_03")
+    center = TOP_SEAM_COUNT // 2
+    site = f"site_top_seam_{center:02d}"
+    body = _body_id(model, f"top_seam_band_{center:02d}")
+    jid = _joint_id(model, f"top_seam_band_{center:02d}_hinge")
+    dof = int(model.jnt_dofadr[jid]) if jid >= 0 else -1
     baseline = _site_pos(model, data, site)
     max_change = 0.0
     for _ in range(int(0.16 / model.opt.timestep)):
         # 2F close 전/중 preload를 단순화한 국소 하향 압력입니다.
-        data.xfrc_applied[body, :3] = np.array([0.0, 0.0, -6.0])
+        data.xfrc_applied[body, :3] = np.array([0.0, 0.0, -8.0])
+        if dof >= 0:
+            data.qfrc_applied[dof] += 0.65
         mujoco.mj_step(model, data)
         max_change = max(max_change, float(np.linalg.norm(_site_pos(model, data, site) - baseline)))
     data.xfrc_applied[:] = 0.0
+    data.qfrc_applied[:] = 0.0
     return 1000.0 * max_change
 
 
 def _scoop_insertion_test(model: mujoco.MjModel, data: mujoco.MjData, *, tuned_pair_force: bool) -> float:
-    left = "site_lower_belly_01_tip"
-    right = "site_lower_belly_02_tip"
-    left_body = _body_id(model, "lower_belly_01")
-    right_body = _body_id(model, "lower_belly_02")
+    center = TOP_SEAM_COUNT // 2
+    left = f"site_lower_left_{center:02d}"
+    right = f"site_lower_right_{center:02d}"
+    left_body = _body_id(model, f"lower_left_{center:02d}")
+    right_body = _body_id(model, f"lower_right_{center:02d}")
     gap0 = float(np.linalg.norm(_site_pos(model, data, left) - _site_pos(model, data, right)))
     max_opening = 0.0
     torque_scale = 12.0 if not tuned_pair_force else 35.0
@@ -239,16 +247,19 @@ def _scoop_insertion_test(model: mujoco.MjModel, data: mujoco.MjData, *, tuned_p
 
 
 def _support_release_sag_test(model: mujoco.MjModel, data: mujoco.MjData) -> tuple[float, float]:
-    top_before = _site_pos(model, data, "site_top_seam_03")[2]
-    bottom_before = _site_pos(model, data, "site_bottom_sling")[2]
+    center = TOP_SEAM_COUNT // 2
+    top_site = f"site_top_seam_{center:02d}"
+    bottom_site = "site_bottom_center"
+    top_before = _site_pos(model, data, top_site)[2]
+    bottom_before = _site_pos(model, data, bottom_site)[2]
     geom_id = _geom_id(model, "hidden_support_geom")
     if geom_id >= 0:
         model.geom_contype[geom_id] = 0
         model.geom_conaffinity[geom_id] = 0
         model.geom_rgba[geom_id, 3] = 0.0
     _step(model, data, 0.30)
-    top_after = _site_pos(model, data, "site_top_seam_03")[2]
-    bottom_after = _site_pos(model, data, "site_bottom_sling")[2]
+    top_after = _site_pos(model, data, top_site)[2]
+    bottom_after = _site_pos(model, data, bottom_site)[2]
     bottom_sag_mm = 1000.0 * max(0.0, bottom_before - bottom_after)
     top_reference_drop_mm = 1000.0 * max(0.0, top_before - top_after)
     return bottom_sag_mm, top_reference_drop_mm
@@ -260,7 +271,7 @@ def _fold_brushing_test(model: mujoco.MjModel, data: mujoco.MjData, scenario: st
     if state.fold_coverage_fraction <= 0.0:
         return f"{before:.3f}->{before:.3f}"
 
-    body_name = "fold_patch_left" if abs(state.fold_left_deg) >= abs(state.fold_right_deg) else "fold_patch_right"
+    body_name = "top_edge_occlusion_left" if abs(state.fold_left_deg) >= abs(state.fold_right_deg) else "top_edge_occlusion_right"
     body = _body_id(model, body_name)
     jid = _joint_id(model, f"{body_name}_hinge")
     qadr = int(model.jnt_qposadr[jid]) if jid >= 0 else -1

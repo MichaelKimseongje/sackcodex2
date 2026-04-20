@@ -1,0 +1,17 @@
+txt format Save for document D:\michael\sack\1\Product1_2.CATProduct 
+-------------------------------------------------------------------- 
+ 
+ 
+RootProduct : ÇÁ·Î´öÆ®1 
+  | 
+  |- Product : topplate (topplate.1) 
+  | 
+  |- Product : plate (plate.1) 
+  | 
+  |- Product : plate (plate.2) 
+  | 
+  |- Product : plate (plate.3) 
+  | 
+  |- Product : plate (plate.4) 
+  | 
+  |- Product : plate (plate.5) 

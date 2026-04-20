@@ -1,0 +1,176 @@
+<mujoco model="open_panel_support_prototype">
+  <compiler angle="degree" inertiafromgeom="true" autolimits="true"/>
+
+  <option timestep="0.001" solver="Newton" iterations="80" tolerance="1e-9"
+          cone="elliptic" impratio="5" noslip_iterations="2"/>
+
+  <size njmax="500" nconmax="300"/>
+
+  <visual>
+    <global azimuth="135" elevation="-25" offwidth="1280" offheight="720"/>
+    <quality shadowsize="2048"/>
+  </visual>
+
+  <asset>
+    <texture name="tex_floor" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.72 0.72 0.68" rgb2="0.62 0.62 0.58"/>
+    <material name="mat_floor" texture="tex_floor" texrepeat="3 3" rgba="0.75 0.75 0.70 1"/>
+    <material name="mat_panel" rgba="0.78 0.64 0.38 0.88"/>
+    <material name="mat_panel_edge" rgba="0.95 0.58 0.10 1"/>
+    <material name="mat_hidden_mass" rgba="0.78 0.12 0.08 0.48"/>
+    <material name="mat_scoop" rgba="0.35 0.55 0.75 0.86"/>
+    <material name="mat_gripper" rgba="0.23 0.24 0.26 1"/>
+    <material name="mat_pad" rgba="0.04 0.04 0.04 1"/>
+    <material name="mat_site" rgba="0.1 0.8 0.1 1"/>
+  </asset>
+
+  <default>
+    <geom condim="4" friction="1.1 0.04 0.004" solref="0.012 1" solimp="0.86 0.96 0.002"/>
+    <joint damping="0.9" armature="0.002"/>
+    <default class="panel">
+      <geom type="box" material="mat_panel" density="280" contype="1" conaffinity="1"/>
+      <joint type="hinge" limited="true" damping="1.4" stiffness="4.0" armature="0.004"/>
+    </default>
+    <default class="mass_slide">
+      <joint type="slide" limited="true" damping="1.6" stiffness="0.25" armature="0.002"/>
+      <geom type="ellipsoid" material="mat_hidden_mass" density="900" contype="1" conaffinity="1"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light name="key" pos="0 -1 1.6" dir="0.1 0.7 -1" diffuse="0.9 0.85 0.75"/>
+    <camera name="overview" pos="0.52 -0.82 0.48" xyaxes="0.83 0.55 0 -0.25 0.38 0.89"/>
+    <camera name="side" pos="0 -0.95 0.25" xyaxes="1 0 0 0 0.25 0.97"/>
+    <geom name="floor" type="plane" size="1.2 1.2 0.02" material="mat_floor" condim="3"/>
+
+    <!-- 열린 패널 surrogate의 기준 body. 전체 자루 pose는 freejoint로 움직인다. -->
+    <body name="bag_frame" pos="0 0 0.155">
+      <freejoint name="bag_frame_freejoint"/>
+
+      <!-- 디버그용 hinge carrier. 실제 panel joint 축을 눈으로 확인하기 위한 표시이다. -->
+      <geom name="top_hinge_bar" type="capsule" fromto="-0.235 0 0.063 0.235 0 0.063"
+            size="0.006" material="mat_panel_edge" contype="0" conaffinity="0" group="4"/>
+      <geom name="mid_hinge_bar" type="capsule" fromto="-0.235 0 0.003 0.235 0 0.003"
+            size="0.005" material="mat_panel_edge" contype="0" conaffinity="0" group="4"/>
+      <geom name="bottom_hinge_bar" type="capsule" fromto="-0.19 0 -0.047 0.19 0 -0.047"
+            size="0.005" material="mat_panel_edge" contype="0" conaffinity="0" group="4"/>
+
+      <!-- 5개 rigid panel. 각 panel은 자기 hinge 원점을 기준으로 회전한다. -->
+      <body name="top_panel" pos="0 0 0.063">
+        <joint name="hinge_top_panel" class="panel" axis="1 0 0" range="-16 18" springref="0"/>
+        <geom name="geom_top_panel" class="panel" size="0.235 0.030 0.006" mass="0.035"/>
+        <site name="site_top_center" pos="0 0 0.009" size="0.008" rgba="0.1 0.8 0.1 1"/>
+      </body>
+
+      <body name="left_side_panel" pos="0 0.034 0.057" euler="-24 0 0">
+        <joint name="hinge_left_side_panel" class="panel" axis="1 0 0" range="-55 35" springref="0"/>
+        <geom name="geom_left_side_panel" class="panel" pos="0 0.030 -0.045"
+              size="0.235 0.006 0.057" mass="0.050"/>
+        <site name="site_left_side_center" pos="0 0.030 -0.045" size="0.007" rgba="0.1 0.8 0.1 1"/>
+      </body>
+
+      <body name="right_side_panel" pos="0 -0.034 0.057" euler="24 0 0">
+        <joint name="hinge_right_side_panel" class="panel" axis="1 0 0" range="-35 55" springref="0"/>
+        <geom name="geom_right_side_panel" class="panel" pos="0 -0.030 -0.045"
+              size="0.235 0.006 0.057" mass="0.050"/>
+        <site name="site_right_side_center" pos="0 -0.030 -0.045" size="0.007" rgba="0.1 0.8 0.1 1"/>
+      </body>
+
+      <body name="left_bottom_panel" pos="0 0.090 0.000" euler="-70 0 0">
+        <joint name="hinge_left_bottom_panel" class="panel" axis="1 0 0" range="-45 55" springref="0"/>
+        <geom name="geom_left_bottom_panel" class="panel" pos="0 0.020 -0.038"
+              size="0.205 0.006 0.047" mass="0.045"/>
+        <site name="site_left_bottom_center" pos="0 0.020 -0.038" size="0.007" rgba="0.1 0.8 0.1 1"/>
+      </body>
+
+      <body name="right_bottom_panel" pos="0 -0.090 0.000" euler="70 0 0">
+        <joint name="hinge_right_bottom_panel" class="panel" axis="1 0 0" range="-55 45" springref="0"/>
+        <geom name="geom_right_bottom_panel" class="panel" pos="0 -0.020 -0.038"
+              size="0.205 0.006 0.047" mass="0.045"/>
+        <site name="site_right_bottom_center" pos="0 -0.020 -0.038" size="0.007" rgba="0.1 0.8 0.1 1"/>
+      </body>
+
+      <!-- Hidden 3-clump fill surrogate. 각 clump는 bag_frame 기준 3축 slide로만 움직인다. -->
+      <body name="hidden_mass_C" pos="0 0 -0.010">
+        <joint name="hidden_mass_C_slide_x" class="mass_slide" axis="1 0 0" range="-0.12 0.12"/>
+        <joint name="hidden_mass_C_slide_y" class="mass_slide" axis="0 1 0" range="-0.055 0.055"/>
+        <joint name="hidden_mass_C_slide_z" class="mass_slide" axis="0 0 1" range="-0.048 0.025"/>
+        <geom name="geom_hidden_mass_C" class="mass_slide" size="0.045 0.030 0.023" mass="0.16" group="3"/>
+      </body>
+      <body name="hidden_mass_L" pos="-0.075 0.018 -0.020">
+        <joint name="hidden_mass_L_slide_x" class="mass_slide" axis="1 0 0" range="-0.055 0.080"/>
+        <joint name="hidden_mass_L_slide_y" class="mass_slide" axis="0 1 0" range="-0.040 0.065"/>
+        <joint name="hidden_mass_L_slide_z" class="mass_slide" axis="0 0 1" range="-0.045 0.025"/>
+        <geom name="geom_hidden_mass_L" class="mass_slide" size="0.034 0.026 0.020" mass="0.095" group="3"/>
+      </body>
+      <body name="hidden_mass_R" pos="0.075 -0.018 -0.020">
+        <joint name="hidden_mass_R_slide_x" class="mass_slide" axis="1 0 0" range="-0.080 0.055"/>
+        <joint name="hidden_mass_R_slide_y" class="mass_slide" axis="0 1 0" range="-0.065 0.040"/>
+        <joint name="hidden_mass_R_slide_z" class="mass_slide" axis="0 0 1" range="-0.045 0.025"/>
+        <geom name="geom_hidden_mass_R" class="mass_slide" size="0.034 0.026 0.020" mass="0.095" group="3"/>
+      </body>
+    </body>
+
+    <!-- Scoop은 단일 slide joint로 천천히 삽입하며 depth/contact force를 기록한다. -->
+    <body name="scoop_body" pos="0 -0.285 0.080">
+      <joint name="scoop_insert" type="slide" axis="0 1 0" range="0 0.265"
+             damping="2.5" armature="0.01" limited="true"/>
+      <geom name="geom_scoop_plate" type="box" pos="0 0 0" size="0.245 0.058 0.006"
+            material="mat_scoop" mass="0.20" condim="4" friction="1.0 0.03 0.003"/>
+      <geom name="geom_scoop_lip" type="box" pos="0 0.061 0.018" size="0.245 0.006 0.018"
+            material="mat_scoop" mass="0.04" condim="4" friction="1.0 0.03 0.003"/>
+      <site name="site_scoop_tip" pos="0 0.066 0.026" size="0.008" rgba="0.2 0.4 1 1"/>
+      <site name="site_scoop_center" pos="0 0 0.010" size="0.008" rgba="0.2 0.4 1 1"/>
+    </body>
+
+    <!-- 간단한 2F gripper. Guarded grasp는 Python에서 조건 통과 시 equality를 켠다. -->
+    <body name="gripper_palm" pos="0 0 0.185">
+      <joint name="gripper_lift" type="slide" axis="0 0 1" range="-0.035 0.090"
+             damping="2.5" armature="0.01" limited="true"/>
+      <geom name="geom_gripper_palm" type="box" pos="0 0 0.033" size="0.075 0.018 0.012"
+            material="mat_gripper" mass="0.08" contype="0" conaffinity="0"/>
+      <site name="site_gripper_center" pos="0 0 0" size="0.009" rgba="1 0 0 1"/>
+
+      <body name="left_finger" pos="0 0.082 0.000">
+        <joint name="left_finger_close" type="slide" axis="0 -1 0" range="0 0.060"
+               damping="3.5" armature="0.01" limited="true"/>
+        <geom name="geom_left_finger_pad" type="box" pos="0 0 -0.008" size="0.022 0.010 0.055"
+              material="mat_pad" mass="0.04" condim="4" friction="1.8 0.06 0.006"/>
+        <site name="site_left_pad_inner" pos="0 -0.011 -0.008" size="0.006" rgba="1 0.2 0.2 1"/>
+      </body>
+
+      <body name="right_finger" pos="0 -0.082 0.000">
+        <joint name="right_finger_close" type="slide" axis="0 1 0" range="0 0.060"
+               damping="3.5" armature="0.01" limited="true"/>
+        <geom name="geom_right_finger_pad" type="box" pos="0 0 -0.008" size="0.022 0.010 0.055"
+              material="mat_pad" mass="0.04" condim="4" friction="1.8 0.06 0.006"/>
+        <site name="site_right_pad_inner" pos="0 0.011 -0.008" size="0.006" rgba="1 0.2 0.2 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <!-- Panel edge coherence: 완전 고정이 아니라 soft connect로 열린 단면을 유지한다. -->
+    <connect name="connect_top_left_edge" body1="top_panel" body2="left_side_panel"
+             anchor="0 0.034 0.212" solref="0.050 1" solimp="0.80 0.94 0.002"/>
+    <connect name="connect_top_right_edge" body1="top_panel" body2="right_side_panel"
+             anchor="0 -0.034 0.212" solref="0.050 1" solimp="0.80 0.94 0.002"/>
+    <connect name="connect_left_lower_edge" body1="left_side_panel" body2="left_bottom_panel"
+             anchor="0 0.090 0.154" solref="0.060 1" solimp="0.78 0.92 0.003"/>
+    <connect name="connect_right_lower_edge" body1="right_side_panel" body2="right_bottom_panel"
+             anchor="0 -0.090 0.154" solref="0.060 1" solimp="0.78 0.92 0.003"/>
+    <connect name="connect_bottom_center_edge" body1="left_bottom_panel" body2="right_bottom_panel"
+             anchor="0 0 0.112" solref="0.070 1" solimp="0.72 0.90 0.004"/>
+
+    <!-- Guarded grasp latch. Python에서 조건을 만족할 때만 data.eq_active로 활성화한다. -->
+    <connect name="guarded_grasp_connect" body1="gripper_palm" body2="top_panel"
+             anchor="0 0 0.135" solref="0.085 1" solimp="0.55 0.85 0.010"/>
+  </equality>
+
+  <actuator>
+    <position name="scoop_insert_act" joint="scoop_insert" kp="90" ctrllimited="true" ctrlrange="0 0.265"/>
+    <position name="gripper_lift_act" joint="gripper_lift" kp="90" ctrllimited="true" ctrlrange="-0.035 0.090"/>
+    <position name="left_finger_close_act" joint="left_finger_close" kp="70" ctrllimited="true" ctrlrange="0 0.060"/>
+    <position name="right_finger_close_act" joint="right_finger_close" kp="70" ctrllimited="true" ctrlrange="0 0.060"/>
+  </actuator>
+</mujoco>
