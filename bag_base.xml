@@ -1,0 +1,165 @@
+<mujoco model="bag_base">
+  <!--
+    핵심 물리 파라미터
+    - timestep: 0.001
+    - integrator: implicitfast
+    - solver: Newton
+    - iterations: 120
+    - ls_iterations: 30
+    - floor condim: 3
+    - bag mass: 0.35
+    - bag radius: 0.0045
+    - bag contact condim: 3
+    - bag contact friction: 0.4 0.01 0.001
+    - bag contact solref: 0.03 1
+    - bag contact solimp: 0.85 0.95 0.001
+    - bag edge equality: true
+    - bag edge damping: 20
+    참고: 현재 MuJoCo 3.1.6 환경에서는 이 단순 direct shell 구성이 shell plugin 경로보다 안정적이었다.
+  -->
+
+  <compiler angle="radian" coordinate="local"/>
+
+  <option
+      timestep="0.001"
+      gravity="0 0 -9.81"
+      integrator="implicitfast"
+      solver="Newton"
+      iterations="120"
+      ls_iterations="30"
+      jacobian="sparse"/>
+
+  <size memory="256M" nconmax="4000"/>
+
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+  </visual>
+
+  <worldbody>
+    <light name="key_light" pos="0 0 2.0" dir="0 0 -1" diffuse="0.85 0.85 0.85"/>
+    <camera name="overview" pos="1.05 -1.15 0.85" xyaxes="0.72 0.69 0 -0.30 0.31 0.90"/>
+
+    <geom
+        name="floor"
+        type="plane"
+        size="2 2 0.1"
+        rgba="0.92 0.92 0.92 1"
+        friction="0.9 0.02 0.002"
+        condim="3"/>
+
+    <!--
+      bag_frame은 향후 시나리오에서 공통 기준 프레임으로 재사용할 고정 body 이름이다.
+      현재 base scene에서는 shell 안정화를 위해 world에 고정한다.
+    -->
+    <body name="bag_frame" pos="0 0 0.135">
+      <site name="bag_frame_origin" pos="0 0 0" size="0.005" rgba="0.95 0.15 0.15 1"/>
+
+      <flexcomp
+          name="bag_shell"
+          type="direct"
+          dim="2"
+          mass="0.35"
+          radius="0.0045"
+          rgba="0.77 0.59 0.36 1"
+          point="
+            0.000000 0.000000 0.150000
+            0.045000 0.000000 0.110000
+            0.031820 0.026870 0.110000
+            0.000000 0.038000 0.110000
+            -0.031820 0.026870 0.110000
+            -0.045000 0.000000 0.110000
+            -0.031820 -0.026870 0.110000
+            -0.000000 -0.038000 0.110000
+            0.031820 -0.026870 0.110000
+            0.080000 0.000000 0.000000
+            0.056569 0.038891 0.000000
+            0.000000 0.055000 0.000000
+            -0.056569 0.038891 0.000000
+            -0.080000 0.000000 0.000000
+            -0.056569 -0.038891 0.000000
+            -0.000000 -0.055000 0.000000
+            0.056569 -0.038891 0.000000
+            0.052000 0.000000 -0.115000
+            0.036770 0.028284 -0.115000
+            0.000000 0.040000 -0.115000
+            -0.036770 0.028284 -0.115000
+            -0.052000 0.000000 -0.115000
+            -0.036770 -0.028284 -0.115000
+            -0.000000 -0.040000 -0.115000
+            0.036770 -0.028284 -0.115000
+            0.000000 0.000000 -0.150000"
+          element="
+            0 1 2
+            0 2 3
+            0 3 4
+            0 4 5
+            0 5 6
+            0 6 7
+            0 7 8
+            0 8 1
+            1 2 10
+            1 10 9
+            2 3 11
+            2 11 10
+            3 4 12
+            3 12 11
+            4 5 13
+            4 13 12
+            5 6 14
+            5 14 13
+            6 7 15
+            6 15 14
+            7 8 16
+            7 16 15
+            8 1 9
+            8 9 16
+            9 10 18
+            9 18 17
+            10 11 19
+            10 19 18
+            11 12 20
+            11 20 19
+            12 13 21
+            12 21 20
+            13 14 22
+            13 22 21
+            14 15 23
+            14 23 22
+            15 16 24
+            15 24 23
+            16 9 17
+            16 17 24
+            25 18 17
+            25 19 18
+            25 20 19
+            25 21 20
+            25 22 21
+            25 23 22
+            25 24 23
+            25 17 24">
+
+        <!-- floor contact만 먼저 단순하게 본다. self collision은 이후 scenario에서 필요 시 확장한다. -->
+        <contact
+            condim="3"
+            selfcollide="none"
+            internal="false"
+            friction="0.4 0.01 0.001"
+            solref="0.03 1"
+            solimp="0.85 0.95 0.001"/>
+
+        <!-- 2D shell surrogate를 조용히 수렴시키기 위한 edge equality 기반 안정화 -->
+        <edge equality="true" damping="20"/>
+
+        <!-- 상단 rim을 bag_frame에 고정해서 sack surrogate 기준 프레임을 유지한다. -->
+        <pin id="1"/>
+        <pin id="2"/>
+        <pin id="3"/>
+        <pin id="4"/>
+        <pin id="5"/>
+        <pin id="6"/>
+        <pin id="7"/>
+        <pin id="8"/>
+      </flexcomp>
+    </body>
+  </worldbody>
+</mujoco>

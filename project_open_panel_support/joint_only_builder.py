@@ -1,0 +1,167 @@
+"""Gripper 없이 open-panel sack joint motion만 확인하는 MuJoCo XML builder.
+
+이 파일의 목적은 support-state 평가 이전에, panel body가 hinge joint를
+기준으로 실제 회전하는지 확인하는 것이다.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+
+PROJECT_DIR = Path(__file__).resolve().parent
+GENERATED_DIR = PROJECT_DIR / "generated"
+JOINT_SCENE_XML = GENERATED_DIR / "open_panel_joint_only_scene.xml"
+
+
+def build_joint_only_xml() -> str:
+    """그리퍼/scoop 없는 자루 joint-only 확인용 XML."""
+
+    return r'''<mujoco model="open_panel_joint_only">
+  <compiler angle="degree" inertiafromgeom="true" autolimits="true"/>
+
+  <option timestep="0.001" solver="Newton" iterations="80" tolerance="1e-9"
+          cone="elliptic" impratio="5" noslip_iterations="1"/>
+
+  <visual>
+    <global azimuth="135" elevation="-25" offwidth="1280" offheight="720"/>
+  </visual>
+
+  <asset>
+    <texture name="tex_floor" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.72 0.72 0.68" rgb2="0.62 0.62 0.58"/>
+    <material name="mat_floor" texture="tex_floor" texrepeat="3 3" rgba="0.75 0.75 0.70 1"/>
+    <material name="mat_panel" rgba="0.78 0.64 0.38 0.86"/>
+    <material name="mat_top" rgba="0.92 0.74 0.36 0.92"/>
+    <material name="mat_hinge" rgba="1.0 0.55 0.05 1"/>
+    <material name="mat_mass" rgba="0.78 0.10 0.08 0.45"/>
+  </asset>
+
+  <default>
+    <geom condim="4" friction="1.0 0.04 0.004" solref="0.012 1" solimp="0.86 0.96 0.002"/>
+    <joint damping="0.8" armature="0.002"/>
+    <default class="panel">
+      <geom type="box" material="mat_panel" density="260" contype="1" conaffinity="1"/>
+      <joint type="hinge" limited="true" damping="1.1" stiffness="1.4" armature="0.003"/>
+    </default>
+    <default class="mass_slide">
+      <joint type="slide" limited="true" damping="1.3" stiffness="0.2" armature="0.002"/>
+      <geom type="ellipsoid" material="mat_mass" density="850" contype="1" conaffinity="1"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light name="key" pos="0 -1 1.5" dir="0.1 0.6 -1"/>
+    <camera name="joint_demo_cam" pos="0.52 -0.82 0.42" xyaxes="0.83 0.55 0 -0.22 0.34 0.91"/>
+    <camera name="front_joint_cam" pos="0 -0.82 0.21" xyaxes="1 0 0 0 0.18 0.98"/>
+    <geom name="floor" type="plane" size="1.2 1.2 0.02" material="mat_floor"/>
+
+    <body name="bag_frame" pos="0 0 0.165">
+      <freejoint name="bag_frame_freejoint"/>
+
+      <!-- 주황색 capsule은 hinge 축을 눈으로 확인하기 위한 debug carrier이다. -->
+      <geom name="hinge_axis_top" type="capsule" fromto="-0.25 0 0.065 0.25 0 0.065"
+            size="0.007" material="mat_hinge" contype="0" conaffinity="0" group="4"/>
+      <geom name="hinge_axis_left_mid" type="capsule" fromto="-0.25 0.088 0.006 0.25 0.088 0.006"
+            size="0.006" material="mat_hinge" contype="0" conaffinity="0" group="4"/>
+      <geom name="hinge_axis_right_mid" type="capsule" fromto="-0.25 -0.088 0.006 0.25 -0.088 0.006"
+            size="0.006" material="mat_hinge" contype="0" conaffinity="0" group="4"/>
+      <geom name="hinge_axis_bottom" type="capsule" fromto="-0.21 0 -0.055 0.21 0 -0.055"
+            size="0.006" material="mat_hinge" contype="0" conaffinity="0" group="4"/>
+
+      <!-- 각 panel body는 bag_frame에 대한 hinge joint 하나만 가진다. -->
+      <body name="top_panel" pos="0 0 0.065">
+        <joint name="hinge_top_panel" class="panel" axis="1 0 0" range="-35 35" springref="0"/>
+        <geom name="geom_top_panel" type="box" size="0.245 0.030 0.006" material="mat_top" mass="0.030"/>
+        <site name="site_top_panel" pos="0 0 0.012" size="0.009" rgba="0 0.8 0.1 1"/>
+      </body>
+
+      <body name="left_side_panel" pos="0 0.038 0.058" euler="-22 0 0">
+        <joint name="hinge_left_side_panel" class="panel" axis="1 0 0" range="-70 55" springref="0"/>
+        <geom name="geom_left_side_panel" class="panel" pos="0 0.038 -0.050"
+              size="0.245 0.006 0.062" mass="0.048"/>
+        <site name="site_left_panel_tip" pos="0 0.076 -0.100" size="0.008" rgba="0 0.8 0.1 1"/>
+      </body>
+
+      <body name="right_side_panel" pos="0 -0.038 0.058" euler="22 0 0">
+        <joint name="hinge_right_side_panel" class="panel" axis="1 0 0" range="-55 70" springref="0"/>
+        <geom name="geom_right_side_panel" class="panel" pos="0 -0.038 -0.050"
+              size="0.245 0.006 0.062" mass="0.048"/>
+        <site name="site_right_panel_tip" pos="0 -0.076 -0.100" size="0.008" rgba="0 0.8 0.1 1"/>
+      </body>
+
+      <body name="left_bottom_panel" pos="0 0.094 -0.002" euler="-68 0 0">
+        <joint name="hinge_left_bottom_panel" class="panel" axis="1 0 0" range="-60 65" springref="0"/>
+        <geom name="geom_left_bottom_panel" class="panel" pos="0 0.026 -0.040"
+              size="0.210 0.006 0.050" mass="0.043"/>
+        <site name="site_left_bottom_tip" pos="0 0.052 -0.080" size="0.008" rgba="0 0.8 0.1 1"/>
+      </body>
+
+      <body name="right_bottom_panel" pos="0 -0.094 -0.002" euler="68 0 0">
+        <joint name="hinge_right_bottom_panel" class="panel" axis="1 0 0" range="-65 60" springref="0"/>
+        <geom name="geom_right_bottom_panel" class="panel" pos="0 -0.026 -0.040"
+              size="0.210 0.006 0.050" mass="0.043"/>
+        <site name="site_right_bottom_tip" pos="0 -0.052 -0.080" size="0.008" rgba="0 0.8 0.1 1"/>
+      </body>
+
+      <!-- 내부 clump는 DEM이 아니라 3개 coarse mass이다. -->
+      <body name="hidden_mass_C" pos="0 0 -0.012">
+        <joint name="hidden_mass_C_slide_x" class="mass_slide" axis="1 0 0" range="-0.12 0.12"/>
+        <joint name="hidden_mass_C_slide_y" class="mass_slide" axis="0 1 0" range="-0.055 0.055"/>
+        <joint name="hidden_mass_C_slide_z" class="mass_slide" axis="0 0 1" range="-0.050 0.025"/>
+        <geom name="geom_hidden_mass_C" class="mass_slide" size="0.045 0.030 0.023" mass="0.16"/>
+      </body>
+      <body name="hidden_mass_L" pos="-0.075 0.018 -0.022">
+        <joint name="hidden_mass_L_slide_x" class="mass_slide" axis="1 0 0" range="-0.055 0.080"/>
+        <joint name="hidden_mass_L_slide_y" class="mass_slide" axis="0 1 0" range="-0.040 0.065"/>
+        <joint name="hidden_mass_L_slide_z" class="mass_slide" axis="0 0 1" range="-0.045 0.025"/>
+        <geom name="geom_hidden_mass_L" class="mass_slide" size="0.034 0.026 0.020" mass="0.095"/>
+      </body>
+      <body name="hidden_mass_R" pos="0.075 -0.018 -0.022">
+        <joint name="hidden_mass_R_slide_x" class="mass_slide" axis="1 0 0" range="-0.080 0.055"/>
+        <joint name="hidden_mass_R_slide_y" class="mass_slide" axis="0 1 0" range="-0.065 0.040"/>
+        <joint name="hidden_mass_R_slide_z" class="mass_slide" axis="0 0 1" range="-0.045 0.025"/>
+        <geom name="geom_hidden_mass_R" class="mass_slide" size="0.034 0.026 0.020" mass="0.095"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <!-- 느슨한 edge coupling. panel이 따로 도망가지 않되 joint 회전은 보이도록 약하게 둔다. -->
+    <connect name="connect_top_left_edge" body1="top_panel" body2="left_side_panel"
+             anchor="0 0.038 0.223" solref="0.080 1" solimp="0.45 0.75 0.010"/>
+    <connect name="connect_top_right_edge" body1="top_panel" body2="right_side_panel"
+             anchor="0 -0.038 0.223" solref="0.080 1" solimp="0.45 0.75 0.010"/>
+    <connect name="connect_left_lower_edge" body1="left_side_panel" body2="left_bottom_panel"
+             anchor="0 0.094 0.163" solref="0.090 1" solimp="0.40 0.72 0.012"/>
+    <connect name="connect_right_lower_edge" body1="right_side_panel" body2="right_bottom_panel"
+             anchor="0 -0.094 0.163" solref="0.090 1" solimp="0.40 0.72 0.012"/>
+    <connect name="connect_bottom_center_edge" body1="left_bottom_panel" body2="right_bottom_panel"
+             anchor="0 0 0.110" solref="0.100 1" solimp="0.35 0.70 0.015"/>
+  </equality>
+
+  <actuator>
+    <!-- ctrlrange는 runtime radian 기준이다. viewer control bar로 직접 흔들 수 있다. -->
+    <position name="top_angle_act" joint="hinge_top_panel" kp="10" ctrllimited="true" ctrlrange="-0.45 0.45"/>
+    <position name="left_side_angle_act" joint="hinge_left_side_panel" kp="12" ctrllimited="true" ctrlrange="-0.75 0.75"/>
+    <position name="right_side_angle_act" joint="hinge_right_side_panel" kp="12" ctrllimited="true" ctrlrange="-0.75 0.75"/>
+    <position name="left_bottom_angle_act" joint="hinge_left_bottom_panel" kp="10" ctrllimited="true" ctrlrange="-0.65 0.65"/>
+    <position name="right_bottom_angle_act" joint="hinge_right_bottom_panel" kp="10" ctrllimited="true" ctrlrange="-0.65 0.65"/>
+  </actuator>
+</mujoco>
+'''
+
+
+def write_joint_only_scene_xml(path: Path = JOINT_SCENE_XML) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(build_joint_only_xml(), encoding="utf-8")
+    return path
+
+
+def main() -> int:
+    print(write_joint_only_scene_xml())
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

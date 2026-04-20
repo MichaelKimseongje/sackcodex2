@@ -1,0 +1,68 @@
+# Shape Change Diagnostics
+
+이 파일은 `visual_skin`이 아니라 실제 articulated physics patches의 움직임을 기준으로 작성됩니다.
+`visual_skin`은 physics-free sealed sack silhouette이며, 실시간 변형 판정에는 사용하지 않습니다.
+
+렌더 결과:
+- physics patch debug: `project_dual_sack/out/shape_diagnostics/*_physics_patch_debug.png`
+- visual skin only: `project_dual_sack/out/shape_diagnostics/*_visual_skin.png`
+- overlay: `project_dual_sack/out/shape_diagnostics/*_overlay.png`
+
+## baseline_filled
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=6.572, top_patch_change_mm=22.234, lower_belly_opening_mm=172.657, bottom_sag_mm=0.005
+- after tuning: shoulder_deflection_mm=6.572, top_patch_change_mm=21.151, lower_belly_opening_mm=272.632, bottom_sag_mm=0.005, fold_exposed_fraction_before_after=1.000->1.000
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `0.005 mm`
+
+## underfilled
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=7.793, top_patch_change_mm=19.997, lower_belly_opening_mm=291.736, bottom_sag_mm=0.001
+- after tuning: shoulder_deflection_mm=7.217, top_patch_change_mm=20.955, lower_belly_opening_mm=290.372, bottom_sag_mm=0.001, fold_exposed_fraction_before_after=1.000->1.000
+- shoulder recovery after poke: `True`
+- top reference drop during support release: `0.001 mm`
+
+## top_fold_simple
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=6.036, top_patch_change_mm=22.892, lower_belly_opening_mm=164.592, bottom_sag_mm=0.005
+- after tuning: shoulder_deflection_mm=6.035, top_patch_change_mm=22.849, lower_belly_opening_mm=269.089, bottom_sag_mm=0.005, fold_exposed_fraction_before_after=0.700->0.700
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `0.005 mm`
+
+## top_fold_severe
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=3.891, top_patch_change_mm=19.547, lower_belly_opening_mm=179.021, bottom_sag_mm=0.006
+- after tuning: shoulder_deflection_mm=3.890, top_patch_change_mm=20.149, lower_belly_opening_mm=268.547, bottom_sag_mm=0.006, fold_exposed_fraction_before_after=0.380->0.380
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `0.006 mm`
+
+## eccentric_fill
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=4.522, top_patch_change_mm=22.705, lower_belly_opening_mm=189.274, bottom_sag_mm=0.005
+- after tuning: shoulder_deflection_mm=4.482, top_patch_change_mm=21.556, lower_belly_opening_mm=295.597, bottom_sag_mm=0.016, fold_exposed_fraction_before_after=1.000->1.000
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `0.015 mm`
+
+## jammed_between_neighbors
+- tuning_applied: `True`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=2.516, top_patch_change_mm=12.730, lower_belly_opening_mm=86.015, bottom_sag_mm=0.000
+- after tuning: shoulder_deflection_mm=2.493, top_patch_change_mm=12.788, lower_belly_opening_mm=183.038, bottom_sag_mm=0.000, fold_exposed_fraction_before_after=1.000->1.000
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `0.000 mm`
+
+## post_separation_sag
+- tuning_applied: `False`
+- rigid_like_flag: `False`
+- before tuning: shoulder_deflection_mm=6.426, top_patch_change_mm=85.486, lower_belly_opening_mm=187.413, bottom_sag_mm=11.206
+- after tuning: shoulder_deflection_mm=6.426, top_patch_change_mm=85.486, lower_belly_opening_mm=187.413, bottom_sag_mm=11.206, fold_exposed_fraction_before_after=1.000->1.000
+- shoulder recovery after poke: `False`
+- top reference drop during support release: `11.010 mm`
+
+## Conclusion
+모든 선택 scenario에서 force-driven test에 의해 측정 가능한 patch motion이 발생했습니다.

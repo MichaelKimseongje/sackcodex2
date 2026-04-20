@@ -1,0 +1,10 @@
+﻿component,before,after,reason
+main_bag_topology,rim/upper-skirt/lower-skirt/bottom-cradle style articulated patch bag,explicit twin-shell bag: visible outer shell + hidden inner load shell + ballast masses,"겉보기 rigid bag에 작은 appendage만 붙은 구조가 아니라, 외피와 내부 하중 경로가 분리된 filled sack surrogate로 바꾸기 위함"
+top_grasp_rail_and_seam,short top seam chain with limited local compliance,top_grasp_rail + 11 top_seam_chain segments,2F가 실제로 잡는 상단 edge/봉합선 후보를 명확히 만들고 top preload 변형을 측정하기 위함
+visible_articulated_outer_shell,scenario-facing panels were visually secondary and bag looked rigid-like,outer_front/back/shoulder/side/lower/bottom-edge shell segments are visible physics bodies,visual skin이 아니라 실제 물리 patch가 자루 외형으로 보이게 해서 접촉 시 local shape change를 직접 확인하기 위함
+cylindrical_panel_hinges,broad panels were connected by abstract hinge joints only,"55 visible cyl_hinge_* capsule cues along top seam, front/back shell, shoulder, side, and lower shell panels",판들이 원기둥형 seam/hinge 축을 따라 엮여 접히는 구조로 읽히게 하기 위함
+hidden_inner_load_shell,payload bodies dominated load behavior,"inner_front/back load shell 5+5, inner_bottom load shell 3",외피를 직접 채우는 대신 내부 하중 전달과 sag를 담당하는 hidden load shell을 둬서 bottom-heavy response를 만들기 위함
+hidden_ballast_masses,one or two simple payload ellipsoids,ballast_main + ballast_aux_1 + ballast_aux_2 + ballast_aux_3 with limited slide joints,DEM 없이도 underfilled/eccentric/sag case에서 coarse load redistribution과 COM offset을 표현하기 위함
+outer_inner_coupling,mostly direct articulated shell response,"fixed tendon-like couplings between top rail, outer shell, inner shell, and ballast sites",외피와 내부 하중 shell이 따로 놀지 않고 저차원 coordinated sag/elongation을 보이게 하기 위함
+scoop_support_hull,flat scoop plate only,flat scoop plate + rounded scoop_support_hull capsule,하부 삽입이 날카로운 판 관통처럼 보이지 않고 둥근 support hull과 lower shell interaction으로 보이게 하기 위함
+contact_adaptive_panel_compliance,contact-triggered local joint retuning existed in the GUI path,GUI only monitors near-contact patch count; all shell joints stay always-active passive joints,"평상시에는 봉합된 자루 형상을 유지하고, 2F 접촉 시에만 해당 국소 외피가 더 크게 눌리거나 접히게 하기 위함"

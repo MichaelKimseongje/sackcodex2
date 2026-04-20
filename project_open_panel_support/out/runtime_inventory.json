@@ -1,0 +1,76 @@
+{
+  "xml_path": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\project_open_panel_support\\generated\\open_panel_support_scene.xml",
+  "body_count": 14,
+  "joint_count": 19,
+  "site_count": 10,
+  "panel_bodies": [
+    "top_panel",
+    "left_side_panel",
+    "right_side_panel",
+    "left_bottom_panel",
+    "right_bottom_panel"
+  ],
+  "hidden_mass_bodies": [
+    "hidden_mass_C",
+    "hidden_mass_L",
+    "hidden_mass_R"
+  ],
+  "scoop_bodies": [
+    "scoop_body"
+  ],
+  "gripper_bodies": [
+    "gripper_palm",
+    "left_finger",
+    "right_finger"
+  ],
+  "legacy_body_names_still_remaining": [],
+  "body_names": [
+    "world",
+    "bag_frame",
+    "top_panel",
+    "left_side_panel",
+    "right_side_panel",
+    "left_bottom_panel",
+    "right_bottom_panel",
+    "hidden_mass_C",
+    "hidden_mass_L",
+    "hidden_mass_R",
+    "scoop_body",
+    "gripper_palm",
+    "left_finger",
+    "right_finger"
+  ],
+  "joint_names": [
+    "bag_frame_freejoint",
+    "hinge_top_panel",
+    "hinge_left_side_panel",
+    "hinge_right_side_panel",
+    "hinge_left_bottom_panel",
+    "hinge_right_bottom_panel",
+    "hidden_mass_C_slide_x",
+    "hidden_mass_C_slide_y",
+    "hidden_mass_C_slide_z",
+    "hidden_mass_L_slide_x",
+    "hidden_mass_L_slide_y",
+    "hidden_mass_L_slide_z",
+    "hidden_mass_R_slide_x",
+    "hidden_mass_R_slide_y",
+    "hidden_mass_R_slide_z",
+    "scoop_insert",
+    "gripper_lift",
+    "left_finger_close",
+    "right_finger_close"
+  ],
+  "site_names": [
+    "site_top_center",
+    "site_left_side_center",
+    "site_right_side_center",
+    "site_left_bottom_center",
+    "site_right_bottom_center",
+    "site_scoop_tip",
+    "site_scoop_center",
+    "site_gripper_center",
+    "site_left_pad_inner",
+    "site_right_pad_inner"
+  ]
+}

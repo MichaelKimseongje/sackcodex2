@@ -1,0 +1,10 @@
+﻿<mujoco model="flex_grid_test">
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+  <worldbody>
+    <geom type="plane" size="2 2 0.1"/>
+    <body name="bag" pos="0 0 0.5">
+      <freejoint/>
+      <flexcomp name="bagflex" type="grid" dim="2" count="4 4 1" spacing="0.03 0.03 0.03" mass="1" radius="0.003"/>
+    </body>
+  </worldbody>
+</mujoco>

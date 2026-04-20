@@ -1,0 +1,226 @@
+<mujoco model="panel_designer_open_panel">
+  <compiler angle="degree" inertiafromgeom="true" autolimits="true"/>
+  <option timestep="0.001" solver="Newton" iterations="80" tolerance="1e-9" cone="elliptic" impratio="5"/>
+
+  <visual>
+    <global azimuth="135" elevation="-25" offwidth="1280" offheight="720"/>
+  </visual>
+
+  <asset>
+    <texture name="tex_floor" type="2d" builtin="checker" width="512" height="512"
+             rgb1="0.72 0.72 0.68" rgb2="0.62 0.62 0.58"/>
+    <material name="mat_floor" texture="tex_floor" texrepeat="3 3" rgba="0.75 0.75 0.70 1"/>
+    <material name="mat_panel" rgba="0.75 0.62 0.39 0.88"/>
+    <material name="mat_top_panel" rgba="0.94 0.72 0.33 0.93"/>
+    <material name="mat_hinge" rgba="1.0 0.52 0.02 1"/>
+    <material name="mat_hidden_mass" rgba="0.78 0.08 0.05 0.45"/>
+  </asset>
+
+  <worldbody>
+    <light name="key" pos="0 -1 1.6" dir="0.1 0.7 -1"/>
+    <camera name="designer_cam" pos="0.58 -0.88 0.50" xyaxes="0.83 0.55 0 -0.25 0.38 0.89"/>
+    <camera name="front_cam" pos="0 -0.92 0.26" xyaxes="1 0 0 0 0.24 0.97"/>
+    <geom name="floor" type="plane" size="1.2 1.2 0.02" material="mat_floor"/>
+
+    <body name="bag_frame" pos="0 -0.196000 0.240000">
+      <freejoint name="bag_frame_freejoint"/>
+      <site name="site_close_root" pos="0 0 0" size="0.010" rgba="1 0.2 0.2 1"/>
+      <geom name="designer_root_hinge_bar" type="capsule" fromto="-0.145600 0 0 0.145600 0 0"
+            size="0.007" material="mat_hinge" contype="0" conaffinity="0" group="4"/>
+      <body name="panel_0" pos="0 0.000000 0" euler="0.000000 0 0">
+        <joint name="hinge_panel_0" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+               limited="true" damping="0.020000" stiffness="0.000000"
+               springref="0" armature="0.000300"/>
+        <geom name="geom_panel_0" type="box" pos="0 0.035000 0"
+              size="0.140000 0.035000 0.003000"
+              mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+        <site name="site_panel_0_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+        <body name="panel_1" pos="0 0.070000 0" euler="60.000000 0 0">
+          <joint name="hinge_panel_1" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                 limited="true" damping="0.020000" stiffness="0.000000"
+                 springref="0" armature="0.000300"/>
+          <geom name="geom_panel_1" type="box" pos="0 0.035000 0"
+                size="0.140000 0.035000 0.003000"
+                mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+          <site name="site_panel_1_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+          <body name="panel_2" pos="0 0.070000 0" euler="60.000000 0 0">
+            <joint name="hinge_panel_2" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                   limited="true" damping="0.020000" stiffness="0.000000"
+                   springref="0" armature="0.000300"/>
+            <geom name="geom_panel_2" type="box" pos="0 0.035000 0"
+                  size="0.140000 0.035000 0.003000"
+                  mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+            <site name="site_panel_2_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+            <body name="panel_3" pos="0 0.070000 0" euler="60.000000 0 0">
+              <joint name="hinge_panel_3" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                     limited="true" damping="0.020000" stiffness="0.000000"
+                     springref="0" armature="0.000300"/>
+              <geom name="geom_panel_3" type="box" pos="0 0.035000 0"
+                    size="0.140000 0.035000 0.003000"
+                    mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+              <site name="site_panel_3_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+              <body name="panel_4" pos="0 0.070000 0" euler="60.000000 0 0">
+                <joint name="hinge_panel_4" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                       limited="true" damping="0.020000" stiffness="0.000000"
+                       springref="0" armature="0.000300"/>
+                <geom name="geom_panel_4" type="box" pos="0 0.035000 0"
+                      size="0.140000 0.035000 0.003000"
+                      mass="0.045000" material="mat_top_panel" condim="4" friction="1.0 0.04 0.004"/>
+                <site name="site_panel_4_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+                <body name="panel_5" pos="0 0.070000 0" euler="60.000000 0 0">
+                  <joint name="hinge_panel_5" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                         limited="true" damping="0.020000" stiffness="0.000000"
+                         springref="0" armature="0.000300"/>
+                  <geom name="geom_panel_5" type="box" pos="0 0.035000 0"
+                        size="0.140000 0.035000 0.003000"
+                        mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+                  <site name="site_panel_5_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+                  <body name="panel_6" pos="0 0.070000 0" euler="45.000000 0 0">
+                    <joint name="hinge_panel_6" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                           limited="true" damping="0.020000" stiffness="0.000000"
+                           springref="0" armature="0.000300"/>
+                    <geom name="geom_panel_6" type="box" pos="0 0.035000 0"
+                          size="0.140000 0.035000 0.003000"
+                          mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+                    <site name="site_panel_6_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+                    <body name="panel_7" pos="0 0.070000 0" euler="45.000000 0 0">
+                      <joint name="hinge_panel_7" type="hinge" axis="1 0 0" range="-90.0000 90.0000"
+                             limited="true" damping="0.020000" stiffness="0.000000"
+                             springref="0" armature="0.000300"/>
+                      <geom name="geom_panel_7" type="box" pos="0 0.035000 0"
+                            size="0.140000 0.035000 0.003000"
+                            mass="0.045000" material="mat_panel" condim="4" friction="1.0 0.04 0.004"/>
+                      <site name="site_panel_7_tip" pos="0 0.070000 0" size="0.008" rgba="0.1 0.85 0.1 1"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <body name="hidden_mass_00" pos="-0.081200 0.028000 0.036400">
+        <joint name="hidden_mass_00_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_00_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_00_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_00_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_00" type="ellipsoid" size="0.032400 0.019000 0.014400" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_01" pos="-0.066436 0.036400 0.043400">
+        <joint name="hidden_mass_01_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_01_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_01_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_01_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_01" type="ellipsoid" size="0.027600 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_02" pos="-0.051673 0.044800 0.029400">
+        <joint name="hidden_mass_02_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_02_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_02_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_02_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_02" type="ellipsoid" size="0.032400 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_03" pos="-0.036909 0.028000 0.036400">
+        <joint name="hidden_mass_03_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_03_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_03_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_03_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_03" type="ellipsoid" size="0.027600 0.019000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_04" pos="-0.022145 0.036400 0.043400">
+        <joint name="hidden_mass_04_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_04_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_04_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_04_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_04" type="ellipsoid" size="0.032400 0.021000 0.014400" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_05" pos="-0.007382 0.044800 0.029400">
+        <joint name="hidden_mass_05_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_05_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_05_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_05_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_05" type="ellipsoid" size="0.027600 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_06" pos="0.007382 0.028000 0.036400">
+        <joint name="hidden_mass_06_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_06_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_06_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_06_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_06" type="ellipsoid" size="0.032400 0.019000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_07" pos="0.022145 0.036400 0.043400">
+        <joint name="hidden_mass_07_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_07_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_07_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_07_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_07" type="ellipsoid" size="0.027600 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_08" pos="0.036909 0.044800 0.029400">
+        <joint name="hidden_mass_08_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_08_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_08_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_08_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_08" type="ellipsoid" size="0.032400 0.021000 0.014400" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_09" pos="0.051673 0.028000 0.036400">
+        <joint name="hidden_mass_09_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_09_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_09_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_09_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_09" type="ellipsoid" size="0.027600 0.019000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_10" pos="0.066436 0.036400 0.043400">
+        <joint name="hidden_mass_10_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_10_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_10_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_10_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_10" type="ellipsoid" size="0.032400 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+
+      <body name="hidden_mass_11" pos="0.081200 0.044800 0.029400">
+        <joint name="hidden_mass_11_slide_x" type="slide" axis="1 0 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_11_slide_y" type="slide" axis="0 1 0" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_11_slide_z" type="slide" axis="0 0 1" range="-0.055000 0.055000" damping="0.050000" armature="0.000100" limited="true"/>
+        <joint name="hidden_mass_11_ball" type="ball" damping="0.050000" armature="0.000100"/>
+        <geom name="geom_hidden_mass_11" type="ellipsoid" size="0.027600 0.021000 0.016000" mass="0.028333"
+              material="mat_hidden_mass" condim="4" friction="1.0 0.03 0.003"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <tendon>
+    <spatial name="close_loop_panel_7_to_root"
+             stiffness="2800.000000"
+             damping="11.200000"
+             springlength="0.0"
+             width="0.004"
+             rgba="1 0.35 0.05 0.85">
+      <site site="site_panel_7_tip"/>
+      <site site="site_close_root"/>
+    </spatial>
+  </tendon>
+
+
+</mujoco>

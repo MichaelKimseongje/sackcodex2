@@ -1,0 +1,8 @@
+scenario_name,shoulder_deflection_mm,top_patch_change_mm,lower_belly_opening_mm,bottom_sag_mm,fold_exposed_fraction_before_after,world_frame_bag_translation_mm,world_frame_bag_rotation_deg,bag_frame_local_deformation_mm,rigid_like_flag
+baseline_filled,0.121,0.001,0.033,0.000,1.000->1.000,2.740,4.907,3.038,False
+underfilled,0.040,0.001,0.033,0.000,1.000->1.000,5.029,1.803,3.897,False
+top_fold_simple,0.119,0.000,0.033,0.000,0.700->0.710,2.903,6.357,3.170,False
+top_fold_severe,0.140,0.000,0.033,0.000,0.380->0.385,3.629,6.361,3.140,False
+eccentric_fill,0.298,0.001,0.027,0.779,1.000->1.000,20.940,2.633,4.382,False
+jammed_between_neighbors,0.108,0.001,0.033,0.000,1.000->1.000,0.916,0.342,2.221,False
+post_separation_sag,0.124,0.002,0.036,12.959,1.000->1.000,22.474,6.437,16.783,False

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#223344"/>
+    </marker>
+    <style>
+      .title { font: bold 28px Arial, sans-serif; fill: #17212b; }
+      .label { font: 18px Arial, sans-serif; fill: #17212b; }
+      .small { font: 15px Arial, sans-serif; fill: #31465a; }
+      .note { font: 16px Arial, sans-serif; fill: #5c3b1e; }
+      .panel { fill: #d8b77a; stroke: #5d4120; stroke-width: 3; }
+      .panel2 { fill: #c99b5c; stroke: #5d4120; stroke-width: 3; }
+      .skin { fill: #ead7ad; stroke: #9c7b48; stroke-width: 2; opacity: 0.36; }
+      .joint { fill: #2b78c2; stroke: white; stroke-width: 2; }
+      .payload { fill: #7b4a2b; opacity: 0.65; stroke: #3d2114; stroke-width: 2; }
+      .robot { fill: #48535f; stroke: #1e252d; stroke-width: 2; }
+      .scoop { fill: #5c7d8c; stroke: #203640; stroke-width: 2; opacity: 0.85; }
+      .bad { fill: #f6d5d2; stroke: #b94b42; stroke-width: 2; }
+      .good { fill: #d9ead7; stroke: #4f8b4b; stroke-width: 2; }
+      .line { stroke: #223344; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .strap { stroke: #845422; stroke-width: 4; stroke-dasharray: 8 6; fill: none; }
+    </style>
+  </defs>
+
+  <text x="60" y="52" class="title">Visible Articulated Outer Shell Concept</text>
+  <text x="60" y="84" class="small">Rigid panels + passive joints + strap/tendon coupling + visual skin following the panels</text>
+
+  <rect x="55" y="120" width="500" height="260" rx="24" class="bad"/>
+  <text x="85" y="155" class="label">Current weak visual response</text>
+  <ellipse cx="305" cy="250" rx="165" ry="62" class="skin"/>
+  <text x="205" y="256" class="small">physics-free visual skin</text>
+  <rect x="210" y="214" width="190" height="72" rx="12" class="panel"/>
+  <circle cx="210" cy="250" r="11" class="joint"/>
+  <circle cx="400" cy="250" r="11" class="joint"/>
+  <ellipse cx="305" cy="270" rx="76" ry="30" class="payload"/>
+  <path d="M110 250 C150 238 175 232 210 230" class="line"/>
+  <text x="82" y="225" class="small">robot force</text>
+  <text x="120" y="335" class="note">The bag body may slide/rotate while the visible skin still looks almost unchanged.</text>
+
+  <rect x="645" y="120" width="500" height="260" rx="24" class="good"/>
+  <text x="675" y="155" class="label">Desired visible articulated shell</text>
+  <path d="M735 270 C775 178 1018 178 1060 270 C1035 340 763 340 735 270" class="skin"/>
+  <polygon points="758,240 835,205 850,282 770,302" class="panel"/>
+  <polygon points="850,205 940,208 928,292 850,282" class="panel2"/>
+  <polygon points="940,208 1028,243 1010,305 928,292" class="panel"/>
+  <polygon points="785,302 850,282 928,292 995,306 945,334 836,334" class="panel2"/>
+  <circle cx="835" cy="205" r="10" class="joint"/>
+  <circle cx="850" cy="282" r="10" class="joint"/>
+  <circle cx="928" cy="292" r="10" class="joint"/>
+  <circle cx="940" cy="208" r="10" class="joint"/>
+  <ellipse cx="900" cy="314" rx="85" ry="28" class="payload"/>
+  <path d="M838 203 C870 188 910 188 942 207" class="strap"/>
+  <path d="M848 282 C875 318 900 328 930 292" class="strap"/>
+  <path d="M677 252 C712 244 735 238 758 240" class="line"/>
+  <text x="665" y="225" class="small">robot force</text>
+  <text x="708" y="356" class="note">Panels rotate at joints, straps coordinate motion, and the visual skin follows panel sites.</text>
+
+  <rect x="75" y="430" width="310" height="240" rx="18" fill="#f8f2e7" stroke="#b59156" stroke-width="2"/>
+  <text x="100" y="463" class="label">1. Top preload</text>
+  <path d="M140 552 C170 490 292 490 322 552 C300 604 162 604 140 552" class="skin"/>
+  <polygon points="168,542 225,508 235,568 174,584" class="panel"/>
+  <polygon points="235,508 294,540 286,584 235,568" class="panel2"/>
+  <circle cx="225" cy="508" r="8" class="joint"/>
+  <circle cx="235" cy="568" r="8" class="joint"/>
+  <path d="M230 475 L230 505" class="line"/>
+  <text x="118" y="635" class="small">top seam / shoulder panels rotate locally</text>
+
+  <rect x="445" y="430" width="310" height="240" rx="18" fill="#f8f2e7" stroke="#b59156" stroke-width="2"/>
+  <text x="470" y="463" class="label">2. Side push</text>
+  <path d="M510 552 C540 498 662 498 692 552 C665 608 537 608 510 552" class="skin"/>
+  <polygon points="548,516 610,510 604,585 542,590" class="panel"/>
+  <polygon points="610,510 660,536 650,590 604,585" class="panel2"/>
+  <circle cx="548" cy="516" r="8" class="joint"/>
+  <circle cx="604" cy="585" r="8" class="joint"/>
+  <path d="M470 550 L540 550" class="line"/>
+  <text x="480" y="635" class="small">side gusset + belly collapse inward</text>
+
+  <rect x="815" y="430" width="310" height="240" rx="18" fill="#f8f2e7" stroke="#b59156" stroke-width="2"/>
+  <text x="840" y="463" class="label">3. Scoop insertion / sag</text>
+  <path d="M880 544 C910 500 1030 500 1060 544 C1030 618 910 618 880 544" class="skin"/>
+  <polygon points="910,520 970,510 962,584 904,590" class="panel"/>
+  <polygon points="962,584 1030,584 1002,622 930,622" class="panel2"/>
+  <circle cx="962" cy="584" r="8" class="joint"/>
+  <rect x="850" y="602" width="220" height="18" rx="4" class="scoop"/>
+  <path d="M845 611 L900 611" class="line"/>
+  <text x="845" y="635" class="small">lower belly opens; bottom sling drops</text>
+  <text x="930" y="704" class="small">Not a cloth FEM: low-order, task-driven shape response.</text>
+</svg>

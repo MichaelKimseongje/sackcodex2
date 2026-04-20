@@ -1,0 +1,199 @@
+{
+  "episode_id": "regular_well_filled_partially_buried_ep0_try0",
+  "seed": 1200,
+  "baseline": "top_grasp_flat_scoop_drag",
+  "benchmark": {
+    "name": "Sack Support-State Benchmark",
+    "scope": "task-driven benchmark",
+    "research_question": "support-state formation under shape and pile uncertainty",
+    "target_case": {
+      "benchmark_name": "Sack Support-State Benchmark",
+      "research_question": "support-state formation under shape and pile uncertainty",
+      "shape_family": "regular_well_filled",
+      "pile_difficulty": "partially_buried",
+      "case_id": "regular_well_filled:partially_buried",
+      "tags": [
+        "regular_well_filled",
+        "partially_buried",
+        "cover_contact"
+      ]
+    }
+  },
+  "settle_report": {
+    "settle_seconds": 5.0,
+    "settle_steps": 2500,
+    "stable": true,
+    "max_linear_speed": 0.020896925464297108,
+    "max_angular_speed": 0.2712460003290539,
+    "max_position_drift": 0.0014167778619158546,
+    "min_body_height": 0.1057042827086617,
+    "failure_tags": []
+  },
+  "target_name": "sack_0",
+  "target_variant": "regular_well_filled",
+  "target_pile_difficulty": "partially_buried",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\regular_well_filled_partially_buried_ep0_try0.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.6282210275706573,
+        0.033583303083314635,
+        0.11106985115041976
+      ],
+      "euler": [
+        -0.005615402898348026,
+        -0.14492049273232102,
+        1.592479752762424
+      ],
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": true,
+      "mesh_file": "sack8.obj",
+      "mesh_scale": 0.07082759326834293,
+      "fill_ratio": 0.8731457738780903,
+      "top_collapse": 0.0016161579855067912,
+      "side_bulge": 0.006078567597495055,
+      "flattening": 0.8817890057784563,
+      "pile_difficulty": "partially_buried",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "partially_buried",
+        "cover_contact"
+      ],
+      "benchmark_case_id": "regular_well_filled:partially_buried"
+    },
+    {
+      "name": "sack_1",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.7219510734692411,
+        -0.02065227851210193,
+        0.12169142471855413
+      ],
+      "euler": [
+        -0.03710435529244005,
+        -0.00715901744261202,
+        1.3527321296087713
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.06797750941077227,
+      "fill_ratio": 0.6536720407536905,
+      "top_collapse": 0.016651399860766226,
+      "side_bulge": 0.01740792719041409,
+      "flattening": 0.8659610094375235,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "side_bulged_unstable",
+        "side_exposed",
+        "top_collapse",
+        "side_asymmetry"
+      ],
+      "benchmark_case_id": "side_bulged_unstable:side_exposed"
+    },
+    {
+      "name": "sack_2",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.5562779716646004,
+        -0.02782420912007881,
+        0.12153263009619342
+      ],
+      "euler": [
+        0.1319848474227362,
+        0.024604643073226823,
+        -2.6404211924387524
+      ],
+      "exposed_face": "top",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack2.obj",
+      "mesh_scale": 0.06773190665705833,
+      "fill_ratio": 0.5963012292156858,
+      "top_collapse": 0.026346450253431644,
+      "side_bulge": 0.0025626684927525763,
+      "flattening": 1.025683852797353,
+      "pile_difficulty": "top_exposed",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "top_exposed",
+        "top_collapse"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:top_exposed"
+    },
+    {
+      "name": "sack_3",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.44729579867503233,
+        0.04592697913543418,
+        0.11057885167864591
+      ],
+      "euler": [
+        -0.21486852490160635,
+        0.0344650830527965,
+        1.2920494170587995
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack7.obj",
+      "mesh_scale": 0.07473503435747955,
+      "fill_ratio": 1.0513522282846672,
+      "top_collapse": 0.005654520664995184,
+      "side_bulge": 0.006381735364629961,
+      "flattening": 0.9489675692625877,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "side_exposed"
+      ],
+      "benchmark_case_id": "regular_well_filled:side_exposed"
+    },
+    {
+      "name": "sack_4",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.5528659180072267,
+        -0.1633506400520041,
+        0.1084038850591086
+      ],
+      "euler": [
+        0.04907345416031647,
+        -0.15882650240132282,
+        2.1634366598492427
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack10.obj",
+      "mesh_scale": 0.0712153961021931,
+      "fill_ratio": 0.633997609552447,
+      "top_collapse": 0.01880207000964325,
+      "side_bulge": 0.002373802860590324,
+      "flattening": 0.9538987389471657,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "side_exposed",
+        "top_collapse"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:side_exposed"
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.6246033254263543,
+    "support_success": true,
+    "scoop_insertion_depth": 0.157828976217775,
+    "micro_lift_stability": 0.44563750187119455,
+    "slip_distance": 0.001633268513274408,
+    "tilt_deg": 0.23209124872124712,
+    "dropped": false,
+    "contact_count": 32,
+    "failure_tags": []
+  }
+}

@@ -1,0 +1,481 @@
+<mujoco model="low_fill_top_collapsed_leaning_wedged_ep0_try1">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true" meshdir="D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/bullet3-master (1)/bullet3-master/examples/pybullet/examples/DeformableTest/Sackcodex2/object"/>
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast" iterations="100" tolerance="1e-8"/>
+  <size memory="768M" nconmax="12000"/>
+
+  <visual>
+    <global azimuth="128" elevation="-20"/>
+    <headlight ambient="0.34 0.34 0.34" diffuse="0.78 0.78 0.78" specular="0.15 0.15 0.15"/>
+    <rgba haze="0.11 0.13 0.18 1"/>
+  </visual>
+
+  <default>
+    <geom condim="4" friction="1.15 0.03 0.01" margin="0.003" solimp="0.93 0.98 0.003" solref="0.012 1"/>
+    <joint damping="1.2" armature="0.002"/>
+    <position kp="2500" forcelimited="true" forcerange="-420 420"/>
+    <motor ctrllimited="true"/>
+  </default>
+
+  <asset>
+    <mesh name="sack_0_visual_mesh" file="sack10.obj" scale="0.0665 0.0665 0.0680"/>
+    <mesh name="sack_1_visual_mesh" file="sack9.obj" scale="0.0704 0.0704 0.0740"/>
+    <mesh name="sack_2_visual_mesh" file="sack2.obj" scale="0.0737 0.0737 0.0770"/>
+    <mesh name="sack_3_visual_mesh" file="sack7.obj" scale="0.0715 0.0715 0.0766"/>
+    <mesh name="sack_4_visual_mesh" file="sack3.obj" scale="0.0735 0.0735 0.0791"/>
+    <mesh name="sack_5_visual_mesh" file="sack9.obj" scale="0.0733 0.0733 0.0775"/>
+  </asset>
+
+  <worldbody>
+    <light name="key" pos="0.85 0.15 1.8" dir="-0.2 -0.1 -1" directional="true"/>
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.93 0.93 0.93 1"/>
+    <geom name="work_pad" type="box" pos="0.62 0 0.012" size="0.30 0.30 0.012" rgba="0.60 0.61 0.62 1" friction="1.4 0.05 0.01"/>
+    <geom name="corral_front" type="box" pos="0.93 0.00 0.08" size="0.010 0.30 0.08" rgba="0.55 0.55 0.58 0.22" friction="1.0 0.03 0.01"/>
+    <geom name="corral_back" type="box" pos="0.31 0.00 0.08" size="0.010 0.30 0.08" rgba="0.55 0.55 0.58 0.18" friction="1.0 0.03 0.01"/>
+    <geom name="corral_left" type="box" pos="0.62 0.30 0.08" size="0.30 0.010 0.08" rgba="0.55 0.55 0.58 0.14" friction="1.0 0.03 0.01"/>
+    <geom name="corral_right" type="box" pos="0.62 -0.30 0.08" size="0.30 0.010 0.08" rgba="0.55 0.55 0.58 0.14" friction="1.0 0.03 0.01"/>
+    <camera name="overview" pos="1.22 0.00 0.92" xyaxes="0 1 0 -0.46 0 0.88"/>
+
+    <body name="gripper_mocap" mocap="true" pos="0.36 -0.33 0.30" quat="0.707107 0 -0.707107 0"/>
+    <body name="scoop_mocap" mocap="true" pos="0.42 0.28 0.20" quat="1 0 0 0"/>
+
+    <body name="gripper_ctrl_base" pos="0.36 -0.33 0.30">
+      <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+      <joint name="gripper_ctrl_x" type="slide" axis="1 0 0" limited="true" range="0.20 1.00"/>
+      <body name="gripper_ctrl_y_body">
+        <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+        <joint name="gripper_ctrl_y" type="slide" axis="0 1 0" limited="true" range="-0.60 0.60"/>
+        <body name="gripper_ctrl_z_body">
+          <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+          <joint name="gripper_ctrl_z" type="slide" axis="0 0 1" limited="true" range="0.04 0.70"/>
+          <body name="gripper_ctrl_yaw_body">
+            <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+            <joint name="gripper_ctrl_yaw" type="hinge" axis="0 0 1" limited="true" range="-3.1416 3.1416"/>
+            <body name="gripper_ctrl_pitch_body">
+              <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+              <joint name="gripper_ctrl_pitch" type="hinge" axis="0 1 0" limited="true" range="-3.1416 3.1416"/>
+              <body name="gripper_ctrl_roll_body">
+                <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+                <joint name="gripper_ctrl_roll" type="hinge" axis="1 0 0" limited="true" range="-3.1416 3.1416"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <body name="scoop_ctrl_base" pos="0.42 0.28 0.20">
+      <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+      <joint name="scoop_ctrl_x" type="slide" axis="1 0 0" limited="true" range="0.20 1.00"/>
+      <body name="scoop_ctrl_y_body">
+        <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+        <joint name="scoop_ctrl_y" type="slide" axis="0 1 0" limited="true" range="-0.60 0.60"/>
+        <body name="scoop_ctrl_z_body">
+          <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+          <joint name="scoop_ctrl_z" type="slide" axis="0 0 1" limited="true" range="0.04 0.70"/>
+          <body name="scoop_ctrl_yaw_body">
+            <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+            <joint name="scoop_ctrl_yaw" type="hinge" axis="0 0 1" limited="true" range="-3.1416 3.1416"/>
+            <body name="scoop_ctrl_pitch_body">
+              <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+              <joint name="scoop_ctrl_pitch" type="hinge" axis="0 1 0" limited="true" range="-3.1416 3.1416"/>
+              <body name="scoop_ctrl_roll_body">
+                <inertial pos="0 0 0" mass="0.001" diaginertia="1e-6 1e-6 1e-6"/>
+                <joint name="scoop_ctrl_roll" type="hinge" axis="1 0 0" limited="true" range="-3.1416 3.1416"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <body name="gripper_tool" pos="0.36 -0.33 0.30" quat="0.707107 0 -0.707107 0">
+      <freejoint name="gripper_tool_free"/>
+      <inertial pos="0 0 0.04" mass="0.08" diaginertia="0.0002 0.0002 0.0002"/>
+      <geom name="gripper_palm" type="box" pos="0 0 0.030" size="0.020 0.026 0.030" rgba="0.14 0.14 0.14 1"/>
+      <body name="left_finger_body" pos="0 0 0.072">
+        <joint name="left_finger_slide" type="slide" axis="0 1 0" limited="true" range="0.010 0.040" damping="12"/>
+        <geom name="left_finger_geom" type="box" pos="0 0.020 0" size="0.012 0.006 0.040" rgba="0.10 0.10 0.10 1" friction="2.2 0.05 0.01"/>
+      </body>
+      <body name="right_finger_body" pos="0 0 0.072">
+        <joint name="right_finger_slide" type="slide" axis="0 -1 0" limited="true" range="0.010 0.040" damping="12"/>
+        <geom name="right_finger_geom" type="box" pos="0 -0.020 0" size="0.012 0.006 0.040" rgba="0.10 0.10 0.10 1" friction="2.2 0.05 0.01"/>
+      </body>
+      <site name="gripper_pinch_site" pos="0 0 0.074" size="0.006" rgba="1 0 0 1"/>
+    </body>
+
+    <body name="scoop_tool" pos="0.42 0.28 0.20" quat="1 0 0 0">
+      <freejoint name="scoop_tool_free"/>
+      <inertial pos="0 0 0.02" mass="0.10" diaginertia="0.0003 0.0003 0.0003"/>
+      <geom name="scoop_plate" type="box" pos="0.062 0 0" size="0.062 0.085 0.004" rgba="0.28 0.31 0.35 1" friction="1.7 0.05 0.01"/>
+      <geom name="scoop_lip" type="box" pos="0.126 0 0.014" size="0.004 0.085 0.014" rgba="0.24 0.27 0.30 1" friction="1.7 0.05 0.01"/>
+      <geom name="scoop_left_rail" type="box" pos="0.062 0.082 0.018" size="0.056 0.004 0.018" rgba="0.24 0.27 0.30 1"/>
+      <geom name="scoop_right_rail" type="box" pos="0.062 -0.082 0.018" size="0.056 0.004 0.018" rgba="0.24 0.27 0.30 1"/>
+      <geom name="scoop_backstop" type="box" pos="0.000 0 0.022" size="0.006 0.082 0.022" rgba="0.24 0.27 0.30 1"/>
+      <site name="scoop_tip_site" pos="0.126 0 0.005" size="0.005" rgba="0 0 1 1"/>
+      <site name="scoop_center_site" pos="0.060 0 0.020" size="0.005" rgba="0 0.7 1 1"/>
+      <site name="score_overlay_site" pos="0.030 0 0.080" size="0.008" rgba="0 1 0 0.8"/>
+    </body>
+
+
+    <body name="sack_0" pos="0.6288 -0.0559 0.1625" euler="-0.3781 -0.0236 0.2628">
+      <freejoint name="sack_0_free"/>
+
+      <geom name="sack_0_visual" type="mesh" mesh="sack_0_visual_mesh" rgba="0.820 0.670 0.440 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_0_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_0_top_site" pos="0 0.0060 0.0931" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_0_side_site" pos="0.0000 0.0475 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_0_core_geom" type="ellipsoid" pos="0 0 0.0055" size="0.0449 0.0348 0.0666" mass="0.7941" rgba="0.820 0.670 0.440 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_0_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0294" mass="0.1891" rgba="0.820 0.670 0.440 0.10"/>
+      <geom name="sack_0_core_left" type="capsule" fromto="-0.008 0.0304 -0.010 0.018 0.0484 0.060" size="0.0241" mass="0.3403" rgba="0.820 0.670 0.440 0.10"/>
+      <geom name="sack_0_core_right" type="capsule" fromto="-0.006 -0.0304 -0.008 0.020 -0.0504 0.054" size="0.0221" mass="0.3403" rgba="0.820 0.670 0.440 0.10"/>
+
+      <body name="sack_0_bottom_support_proxy_body" pos="0 0.0149 -0.0893">
+        <joint name="sack_0_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="442.0"/>
+        <joint name="sack_0_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="442.0"/>
+        <joint name="sack_0_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="544.7"/>
+        <geom name="sack_0_bottom_support_proxy" type="box" size="0.0724 0.0535 0.0100" mass="0.1512" rgba="0.820 0.670 0.440 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_0_top_grasp_proxy_body" pos="0.0000 0.0060 0.0631">
+        <joint name="sack_0_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="169.7"/>
+        <joint name="sack_0_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="169.7"/>
+        <joint name="sack_0_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="124.0"/>
+        <geom name="sack_0_top_grasp_proxy" type="box" size="0.0564 0.0375 0.0150" mass="0.1134" rgba="0.820 0.670 0.440 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_0_left_side_proxy_body" pos="0 0.0680 0.010">
+        <joint name="sack_0_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="216.5"/>
+        <geom name="sack_0_left_side_proxy" type="box" size="0.0684 0.0090 0.0873" mass="0.1134" rgba="0.820 0.670 0.440 0.24"/>
+      </body>
+
+      <body name="sack_0_right_side_proxy_body" pos="0 -0.0640 0.010">
+        <joint name="sack_0_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="200.8"/>
+        <geom name="sack_0_right_side_proxy" type="box" size="0.0684 0.0090 0.0873" mass="0.1134" rgba="0.820 0.670 0.440 0.24"/>
+      </body>
+
+      <body name="sack_0_front_proxy_body" pos="0.0624 0 0.000">
+        <joint name="sack_0_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="211.0"/>
+        <geom name="sack_0_front_support_proxy" type="box" size="0.0090 0.0535 0.0853" mass="0.0945" rgba="0.820 0.670 0.440 0.22"/>
+      </body>
+
+      <body name="sack_0_back_proxy_body" pos="-0.0624 0 0.000">
+        <joint name="sack_0_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="195.3"/>
+        <geom name="sack_0_back_support_proxy" type="box" size="0.0090 0.0535 0.0853" mass="0.0945" rgba="0.820 0.670 0.440 0.22"/>
+      </body>
+
+      <body name="sack_0_shape_proxy_body" pos="0.0000 0.0224 0.0460">
+        <joint name="sack_0_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="112.0"/>
+        <joint name="sack_0_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="109.0"/>
+        <geom name="sack_0_shape_proxy" type="ellipsoid" size="0.0201 0.0162 0.0264" mass="0.0756" rgba="0.820 0.670 0.440 0.28"/>
+      </body>
+    </body>
+
+    <body name="sack_1" pos="0.5594 -0.1162 0.1278" euler="-0.2095 0.1244 -2.5946">
+      <freejoint name="sack_1_free"/>
+
+      <geom name="sack_1_visual" type="mesh" mesh="sack_1_visual_mesh" rgba="0.840 0.740 0.480 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_1_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_1_top_site" pos="0 -0.0060 0.1324" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_1_side_site" pos="0.0000 -0.0476 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_1_core_geom" type="ellipsoid" pos="0 0 0.0059" size="0.0496 0.0410 0.0876" mass="1.2091" rgba="0.840 0.740 0.480 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_1_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0304" mass="0.2879" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_1_core_left" type="capsule" fromto="-0.008 0.0282 -0.010 0.018 0.0462 0.060" size="0.0241" mass="0.5182" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_1_core_right" type="capsule" fromto="-0.006 -0.0282 -0.008 0.020 -0.0482 0.054" size="0.0221" mass="0.5182" rgba="0.840 0.740 0.480 0.10"/>
+
+      <body name="sack_1_bottom_support_proxy_body" pos="0 0.0086 -0.0881">
+        <joint name="sack_1_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="470.7"/>
+        <joint name="sack_1_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="470.7"/>
+        <joint name="sack_1_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="579.7"/>
+        <geom name="sack_1_bottom_support_proxy" type="box" size="0.0713 0.0536 0.0100" mass="0.2303" rgba="0.840 0.740 0.480 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_1_top_grasp_proxy_body" pos="0.0000 -0.0060 0.1024">
+        <joint name="sack_1_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="180.8"/>
+        <joint name="sack_1_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="180.8"/>
+        <joint name="sack_1_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="133.6"/>
+        <geom name="sack_1_top_grasp_proxy" type="box" size="0.0553 0.0376 0.0150" mass="0.1727" rgba="0.840 0.740 0.480 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_1_left_side_proxy_body" pos="0 0.0659 0.010">
+        <joint name="sack_1_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="236.8"/>
+        <geom name="sack_1_left_side_proxy" type="box" size="0.0673 0.0090 0.0861" mass="0.1727" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_1_right_side_proxy_body" pos="0 -0.0619 0.010">
+        <joint name="sack_1_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="219.6"/>
+        <geom name="sack_1_right_side_proxy" type="box" size="0.0673 0.0090 0.0861" mass="0.1727" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_1_front_proxy_body" pos="0.0613 0 0.000">
+        <joint name="sack_1_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="225.3"/>
+        <geom name="sack_1_front_support_proxy" type="box" size="0.0090 0.0536 0.0841" mass="0.1439" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_1_back_proxy_body" pos="-0.0613 0 0.000">
+        <joint name="sack_1_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="208.1"/>
+        <geom name="sack_1_back_support_proxy" type="box" size="0.0090 0.0536 0.0841" mass="0.1439" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_1_shape_proxy_body" pos="0.0000 -0.0202 0.0364">
+        <joint name="sack_1_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="92.9"/>
+        <joint name="sack_1_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="94.7"/>
+        <geom name="sack_1_shape_proxy" type="ellipsoid" size="0.0201 0.0162 0.0261" mass="0.1152" rgba="0.840 0.740 0.480 0.28"/>
+      </body>
+    </body>
+
+    <body name="sack_2" pos="0.6506 0.0208 0.1417" euler="0.1103 0.0274 -1.1956">
+      <freejoint name="sack_2_free"/>
+
+      <geom name="sack_2_visual" type="mesh" mesh="sack_2_visual_mesh" rgba="0.820 0.670 0.440 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_2_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_2_top_site" pos="0 -0.0060 0.0985" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_2_side_site" pos="0.0000 -0.0494 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_2_core_geom" type="ellipsoid" pos="0 0 0.0055" size="0.0455 0.0356 0.0678" mass="0.8028" rgba="0.820 0.670 0.440 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_2_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0301" mass="0.1911" rgba="0.820 0.670 0.440 0.10"/>
+      <geom name="sack_2_core_left" type="capsule" fromto="-0.008 0.0297 -0.010 0.018 0.0477 0.060" size="0.0241" mass="0.3441" rgba="0.820 0.670 0.440 0.10"/>
+      <geom name="sack_2_core_right" type="capsule" fromto="-0.006 -0.0297 -0.008 0.020 -0.0497 0.054" size="0.0221" mass="0.3441" rgba="0.820 0.670 0.440 0.10"/>
+
+      <body name="sack_2_bottom_support_proxy_body" pos="0 0.0071 -0.0985">
+        <joint name="sack_2_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="464.3"/>
+        <joint name="sack_2_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="464.3"/>
+        <joint name="sack_2_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="571.9"/>
+        <geom name="sack_2_bottom_support_proxy" type="box" size="0.0731 0.0554 0.0100" mass="0.1529" rgba="0.820 0.670 0.440 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_2_top_grasp_proxy_body" pos="0.0000 -0.0060 0.0685">
+        <joint name="sack_2_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="178.3"/>
+        <joint name="sack_2_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="178.3"/>
+        <joint name="sack_2_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="131.4"/>
+        <geom name="sack_2_top_grasp_proxy" type="box" size="0.0571 0.0394 0.0150" mass="0.1147" rgba="0.820 0.670 0.440 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_2_left_side_proxy_body" pos="0 0.0690 0.010">
+        <joint name="sack_2_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="231.3"/>
+        <geom name="sack_2_left_side_proxy" type="box" size="0.0691 0.0090 0.0965" mass="0.1147" rgba="0.820 0.670 0.440 0.24"/>
+      </body>
+
+      <body name="sack_2_right_side_proxy_body" pos="0 -0.0650 0.010">
+        <joint name="sack_2_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="214.4"/>
+        <geom name="sack_2_right_side_proxy" type="box" size="0.0691 0.0090 0.0965" mass="0.1147" rgba="0.820 0.670 0.440 0.24"/>
+      </body>
+
+      <body name="sack_2_front_proxy_body" pos="0.0631 0 0.000">
+        <joint name="sack_2_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="222.1"/>
+        <geom name="sack_2_front_support_proxy" type="box" size="0.0090 0.0554 0.0945" mass="0.0956" rgba="0.820 0.670 0.440 0.22"/>
+      </body>
+
+      <body name="sack_2_back_proxy_body" pos="-0.0631 0 0.000">
+        <joint name="sack_2_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="205.2"/>
+        <geom name="sack_2_back_support_proxy" type="box" size="0.0090 0.0554 0.0945" mass="0.0956" rgba="0.820 0.670 0.440 0.22"/>
+      </body>
+
+      <body name="sack_2_shape_proxy_body" pos="0.0000 -0.0217 0.0386">
+        <joint name="sack_2_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="97.2"/>
+        <joint name="sack_2_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="97.9"/>
+        <geom name="sack_2_shape_proxy" type="ellipsoid" size="0.0201 0.0162 0.0264" mass="0.0765" rgba="0.820 0.670 0.440 0.28"/>
+      </body>
+    </body>
+
+    <body name="sack_3" pos="0.7727 0.1441 0.1241" euler="-0.0400 0.1360 0.6019">
+      <freejoint name="sack_3_free"/>
+
+      <geom name="sack_3_visual" type="mesh" mesh="sack_3_visual_mesh" rgba="0.840 0.740 0.480 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_3_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_3_top_site" pos="0 -0.0060 0.1422" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_3_side_site" pos="0.0000 -0.0491 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_3_core_geom" type="ellipsoid" pos="0 0 0.0060" size="0.0502 0.0419 0.0891" mass="1.2149" rgba="0.840 0.740 0.480 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_3_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0311" mass="0.2893" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_3_core_left" type="capsule" fromto="-0.008 0.0216 -0.010 0.018 0.0396 0.060" size="0.0240" mass="0.5207" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_3_core_right" type="capsule" fromto="-0.006 -0.0216 -0.008 0.020 -0.0416 0.054" size="0.0220" mass="0.5207" rgba="0.840 0.740 0.480 0.10"/>
+
+      <body name="sack_3_bottom_support_proxy_body" pos="0 0.0104 -0.0889">
+        <joint name="sack_3_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="491.5"/>
+        <joint name="sack_3_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="491.5"/>
+        <joint name="sack_3_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="605.2"/>
+        <geom name="sack_3_bottom_support_proxy" type="box" size="0.0719 0.0551 0.0100" mass="0.2314" rgba="0.840 0.740 0.480 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_3_top_grasp_proxy_body" pos="0.0000 -0.0060 0.1122">
+        <joint name="sack_3_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="188.9"/>
+        <joint name="sack_3_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="188.9"/>
+        <joint name="sack_3_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="140.5"/>
+        <geom name="sack_3_top_grasp_proxy" type="box" size="0.0559 0.0391 0.0150" mass="0.1736" rgba="0.840 0.740 0.480 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_3_left_side_proxy_body" pos="0 0.0607 0.010">
+        <joint name="sack_3_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="250.9"/>
+        <geom name="sack_3_left_side_proxy" type="box" size="0.0679 0.0090 0.0869" mass="0.1736" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_3_right_side_proxy_body" pos="0 -0.0567 0.010">
+        <joint name="sack_3_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="232.5"/>
+        <geom name="sack_3_right_side_proxy" type="box" size="0.0679 0.0090 0.0869" mass="0.1736" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_3_front_proxy_body" pos="0.0619 0 0.000">
+        <joint name="sack_3_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="235.8"/>
+        <geom name="sack_3_front_support_proxy" type="box" size="0.0090 0.0551 0.0849" mass="0.1446" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_3_back_proxy_body" pos="-0.0619 0 0.000">
+        <joint name="sack_3_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="217.3"/>
+        <geom name="sack_3_back_support_proxy" type="box" size="0.0090 0.0551 0.0849" mass="0.1446" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_3_shape_proxy_body" pos="0.0000 -0.0136 0.0295">
+        <joint name="sack_3_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="79.0"/>
+        <joint name="sack_3_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="84.2"/>
+        <geom name="sack_3_shape_proxy" type="ellipsoid" size="0.0200 0.0160 0.0260" mass="0.1157" rgba="0.840 0.740 0.480 0.28"/>
+      </body>
+    </body>
+
+    <body name="sack_4" pos="0.8231 0.0133 0.1141" euler="-0.0156 -0.1156 -0.9946">
+      <freejoint name="sack_4_free"/>
+
+      <geom name="sack_4_visual" type="mesh" mesh="sack_4_visual_mesh" rgba="0.760 0.600 0.400 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_4_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_4_top_site" pos="0 0.0060 0.1232" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_4_side_site" pos="0.0000 0.0592 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_4_core_geom" type="ellipsoid" pos="0 0 0.0058" size="0.0453 0.0358 0.0800" mass="0.8702" rgba="0.760 0.600 0.400 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_4_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0312" mass="0.2072" rgba="0.760 0.600 0.400 0.10"/>
+      <geom name="sack_4_core_left" type="capsule" fromto="-0.008 0.0395 -0.010 0.018 0.0575 0.060" size="0.0242" mass="0.3729" rgba="0.760 0.600 0.400 0.10"/>
+      <geom name="sack_4_core_right" type="capsule" fromto="-0.006 -0.0395 -0.008 0.020 -0.0595 0.054" size="0.0222" mass="0.3729" rgba="0.760 0.600 0.400 0.10"/>
+
+      <body name="sack_4_bottom_support_proxy_body" pos="0 0.0001 -0.0916">
+        <joint name="sack_4_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="495.5"/>
+        <joint name="sack_4_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="495.5"/>
+        <joint name="sack_4_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="610.0"/>
+        <geom name="sack_4_bottom_support_proxy" type="box" size="0.0762 0.0652 0.0100" mass="0.1657" rgba="0.760 0.600 0.400 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_4_top_grasp_proxy_body" pos="0.0000 0.0060 0.0932">
+        <joint name="sack_4_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="190.5"/>
+        <joint name="sack_4_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="190.5"/>
+        <joint name="sack_4_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="141.8"/>
+        <geom name="sack_4_top_grasp_proxy" type="box" size="0.0602 0.0492 0.0150" mass="0.1243" rgba="0.760 0.600 0.400 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_4_left_side_proxy_body" pos="0 0.0887 0.010">
+        <joint name="sack_4_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="253.0"/>
+        <geom name="sack_4_left_side_proxy" type="box" size="0.0722 0.0090 0.0896" mass="0.1243" rgba="0.760 0.600 0.400 0.24"/>
+      </body>
+
+      <body name="sack_4_right_side_proxy_body" pos="0 -0.0847 0.010">
+        <joint name="sack_4_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="234.4"/>
+        <geom name="sack_4_right_side_proxy" type="box" size="0.0722 0.0090 0.0896" mass="0.1243" rgba="0.760 0.600 0.400 0.24"/>
+      </body>
+
+      <body name="sack_4_front_proxy_body" pos="0.0662 0 0.000">
+        <joint name="sack_4_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="237.7"/>
+        <geom name="sack_4_front_support_proxy" type="box" size="0.0090 0.0652 0.0876" mass="0.1036" rgba="0.760 0.600 0.400 0.22"/>
+      </body>
+
+      <body name="sack_4_back_proxy_body" pos="-0.0662 0 0.000">
+        <joint name="sack_4_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="219.1"/>
+        <geom name="sack_4_back_support_proxy" type="box" size="0.0090 0.0652 0.0876" mass="0.1036" rgba="0.760 0.600 0.400 0.22"/>
+      </body>
+
+      <body name="sack_4_shape_proxy_body" pos="0.0000 0.0315 0.0282">
+        <joint name="sack_4_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="76.4"/>
+        <joint name="sack_4_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="82.3"/>
+        <geom name="sack_4_shape_proxy" type="ellipsoid" size="0.0202 0.0164 0.0262" mass="0.0829" rgba="0.760 0.600 0.400 0.28"/>
+      </body>
+    </body>
+
+    <body name="sack_5" pos="0.5757 0.1791 0.1565" euler="-0.0281 -0.1162 2.3762">
+      <freejoint name="sack_5_free"/>
+
+      <geom name="sack_5_visual" type="mesh" mesh="sack_5_visual_mesh" rgba="0.840 0.740 0.480 0.92" contype="0" conaffinity="0"/>
+      <site name="sack_5_center_site" pos="0 0 0.000" size="0.006" rgba="0 1 0 1"/>
+      <site name="sack_5_top_site" pos="0 -0.0060 0.1356" size="0.007" rgba="1 0.5 0 1"/>
+      <site name="sack_5_side_site" pos="0.0000 -0.0482 0.018" size="0.007" rgba="1 0.8 0 1"/>
+
+      <geom name="sack_5_core_geom" type="ellipsoid" pos="0 0 0.0059" size="0.0498 0.0413 0.0881" mass="0.9732" rgba="0.840 0.740 0.480 0.12" friction="1.0 0.03 0.01"/>
+      <geom name="sack_5_core_front" type="capsule" fromto="-0.0200 0 -0.0200 0.0450 0 0.0600" size="0.0306" mass="0.2317" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_5_core_left" type="capsule" fromto="-0.008 0.0279 -0.010 0.018 0.0459 0.060" size="0.0241" mass="0.4171" rgba="0.840 0.740 0.480 0.10"/>
+      <geom name="sack_5_core_right" type="capsule" fromto="-0.006 -0.0279 -0.008 0.020 -0.0479 0.054" size="0.0221" mass="0.4171" rgba="0.840 0.740 0.480 0.10"/>
+
+      <body name="sack_5_bottom_support_proxy_body" pos="0 -0.0085 -0.0879">
+        <joint name="sack_5_bottom_x" type="slide" axis="1 0 0" limited="true" range="-0.012 0.012" damping="18" stiffness="478.0"/>
+        <joint name="sack_5_bottom_y" type="slide" axis="0 1 0" limited="true" range="-0.012 0.012" damping="18" stiffness="478.0"/>
+        <joint name="sack_5_bottom_z" type="slide" axis="0 0 1" limited="true" range="-0.008 0.020" damping="24" stiffness="588.6"/>
+        <geom name="sack_5_bottom_support_proxy" type="box" size="0.0715 0.0542 0.0100" mass="0.1854" rgba="0.840 0.740 0.480 0.34" friction="1.55 0.05 0.01"/>
+      </body>
+
+      <body name="sack_5_top_grasp_proxy_body" pos="0.0000 -0.0060 0.1056">
+        <joint name="sack_5_top_x" type="slide" axis="1 0 0" limited="true" range="-0.018 0.018" damping="12" stiffness="183.7"/>
+        <joint name="sack_5_top_y" type="slide" axis="0 1 0" limited="true" range="-0.018 0.018" damping="12" stiffness="183.7"/>
+        <joint name="sack_5_top_z" type="slide" axis="0 0 1" limited="true" range="-0.040 0.010" damping="14" stiffness="136.0"/>
+        <geom name="sack_5_top_grasp_proxy" type="box" size="0.0555 0.0382 0.0150" mass="0.1390" rgba="0.840 0.740 0.480 0.26" friction="2.2 0.05 0.01"/>
+      </body>
+
+      <body name="sack_5_left_side_proxy_body" pos="0 0.0661 0.010">
+        <joint name="sack_5_left_side_slide" type="slide" axis="0 -1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="241.7"/>
+        <geom name="sack_5_left_side_proxy" type="box" size="0.0675 0.0090 0.0859" mass="0.1390" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_5_right_side_proxy_body" pos="0 -0.0621 0.010">
+        <joint name="sack_5_right_side_slide" type="slide" axis="0 1 0" limited="true" range="-0.028 0.016" damping="16" stiffness="224.1"/>
+        <geom name="sack_5_right_side_proxy" type="box" size="0.0675 0.0090 0.0859" mass="0.1390" rgba="0.840 0.740 0.480 0.24"/>
+      </body>
+
+      <body name="sack_5_front_proxy_body" pos="0.0615 0 0.000">
+        <joint name="sack_5_front_slide" type="slide" axis="-1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="229.0"/>
+        <geom name="sack_5_front_support_proxy" type="box" size="0.0090 0.0542 0.0839" mass="0.1159" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_5_back_proxy_body" pos="-0.0615 0 0.000">
+        <joint name="sack_5_back_slide" type="slide" axis="1 0 0" limited="true" range="-0.022 0.012" damping="15" stiffness="211.3"/>
+        <geom name="sack_5_back_support_proxy" type="box" size="0.0090 0.0542 0.0839" mass="0.1159" rgba="0.840 0.740 0.480 0.22"/>
+      </body>
+
+      <body name="sack_5_shape_proxy_body" pos="0.0000 -0.0199 0.0340">
+        <joint name="sack_5_bulge_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="8" stiffness="88.0"/>
+        <joint name="sack_5_bulge_z" type="slide" axis="0 0 1" limited="true" range="-0.014 0.028" damping="8" stiffness="91.0"/>
+        <geom name="sack_5_shape_proxy" type="ellipsoid" size="0.0201 0.0162 0.0261" mass="0.0927" rgba="0.840 0.740 0.480 0.28"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <weld name="gripper_follow" body1="gripper_mocap" body2="gripper_tool" torquescale="400" solref="0.002 1" solimp="0.99 0.999 0.0001"/>
+    <weld name="scoop_follow" body1="scoop_mocap" body2="scoop_tool" torquescale="500" solref="0.002 1" solimp="0.99 0.999 0.0001"/>
+  </equality>
+
+  <actuator>
+    <position name="gripper_ctrl_x_act" joint="gripper_ctrl_x" ctrlrange="0.20 1.00" kp="3500" forcerange="-300 300"/>
+    <position name="gripper_ctrl_y_act" joint="gripper_ctrl_y" ctrlrange="-0.60 0.60" kp="3500" forcerange="-300 300"/>
+    <position name="gripper_ctrl_z_act" joint="gripper_ctrl_z" ctrlrange="0.04 0.70" kp="3500" forcerange="-300 300"/>
+    <position name="gripper_ctrl_yaw_act" joint="gripper_ctrl_yaw" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="gripper_ctrl_pitch_act" joint="gripper_ctrl_pitch" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="gripper_ctrl_roll_act" joint="gripper_ctrl_roll" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="scoop_ctrl_x_act" joint="scoop_ctrl_x" ctrlrange="0.20 1.00" kp="3500" forcerange="-300 300"/>
+    <position name="scoop_ctrl_y_act" joint="scoop_ctrl_y" ctrlrange="-0.60 0.60" kp="3500" forcerange="-300 300"/>
+    <position name="scoop_ctrl_z_act" joint="scoop_ctrl_z" ctrlrange="0.04 0.70" kp="3500" forcerange="-300 300"/>
+    <position name="scoop_ctrl_yaw_act" joint="scoop_ctrl_yaw" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="scoop_ctrl_pitch_act" joint="scoop_ctrl_pitch" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="scoop_ctrl_roll_act" joint="scoop_ctrl_roll" ctrlrange="-3.1416 3.1416" kp="1800" forcerange="-250 250"/>
+    <position name="left_finger_act" joint="left_finger_slide" ctrlrange="0.010 0.040" kp="2800" forcerange="-220 220"/>
+    <position name="right_finger_act" joint="right_finger_slide" ctrlrange="0.010 0.040" kp="2800" forcerange="-220 220"/>
+  </actuator>
+
+  <contact>
+    <exclude body1="sack_0_top_grasp_proxy_body" body2="sack_0_left_side_proxy_body"/>
+    <exclude body1="sack_0_top_grasp_proxy_body" body2="sack_0_right_side_proxy_body"/>
+    <exclude body1="sack_1_top_grasp_proxy_body" body2="sack_1_left_side_proxy_body"/>
+    <exclude body1="sack_1_top_grasp_proxy_body" body2="sack_1_right_side_proxy_body"/>
+    <exclude body1="sack_2_top_grasp_proxy_body" body2="sack_2_left_side_proxy_body"/>
+    <exclude body1="sack_2_top_grasp_proxy_body" body2="sack_2_right_side_proxy_body"/>
+    <exclude body1="sack_3_top_grasp_proxy_body" body2="sack_3_left_side_proxy_body"/>
+    <exclude body1="sack_3_top_grasp_proxy_body" body2="sack_3_right_side_proxy_body"/>
+    <exclude body1="sack_4_top_grasp_proxy_body" body2="sack_4_left_side_proxy_body"/>
+    <exclude body1="sack_4_top_grasp_proxy_body" body2="sack_4_right_side_proxy_body"/>
+    <exclude body1="sack_5_top_grasp_proxy_body" body2="sack_5_left_side_proxy_body"/>
+    <exclude body1="sack_5_top_grasp_proxy_body" body2="sack_5_right_side_proxy_body"/>
+  </contact>
+</mujoco>

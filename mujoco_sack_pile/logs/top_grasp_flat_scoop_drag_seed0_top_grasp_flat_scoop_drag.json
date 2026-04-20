@@ -1,0 +1,235 @@
+{
+  "episode_id": "top_grasp_flat_scoop_drag_seed0",
+  "seed": 0,
+  "baseline": "top_grasp_flat_scoop_drag",
+  "benchmark": {
+    "name": "Sack Support-State Benchmark",
+    "scope": "task-driven benchmark",
+    "research_question": "support-state formation under shape and pile uncertainty",
+    "target_case": {
+      "benchmark_name": "Sack Support-State Benchmark",
+      "research_question": "support-state formation under shape and pile uncertainty",
+      "shape_family": "low_fill_top_collapsed",
+      "pile_difficulty": "top_exposed",
+      "case_id": "low_fill_top_collapsed:top_exposed",
+      "tags": [
+        "low_fill_top_collapsed",
+        "top_exposed",
+        "top_collapse"
+      ]
+    }
+  },
+  "settle_report": {
+    "settle_seconds": 5.0,
+    "settle_steps": 2500,
+    "stable": false,
+    "max_linear_speed": 0.10471242383008805,
+    "max_angular_speed": 0.49986029735737125,
+    "max_position_drift": 0.005372858869721525,
+    "min_body_height": 0.10585682578759822,
+    "failure_tags": [
+      "residual_motion"
+    ]
+  },
+  "target_name": "sack_0",
+  "target_variant": "low_fill_top_collapsed",
+  "target_pile_difficulty": "top_exposed",
+  "scene_xml": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\top_grasp_flat_scoop_drag_seed0.xml",
+  "sacks": [
+    {
+      "name": "sack_0",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.6031241725205074,
+        0.011673485523704369,
+        0.1267135803927347
+      ],
+      "euler": [
+        0.0014997938615648743,
+        -0.10002679681220344,
+        -0.5973164307859111
+      ],
+      "exposed_face": "top",
+      "stack_level": 0,
+      "is_target": true,
+      "mesh_file": "sack10.obj",
+      "mesh_scale": 0.0722816721241587,
+      "fill_ratio": 0.48513164875423453,
+      "top_collapse": 0.04860079452186856,
+      "side_bulge": 0.01142042796010398,
+      "flattening": 0.8837543260742833,
+      "pile_difficulty": "top_exposed",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "top_exposed",
+        "top_collapse"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:top_exposed"
+    },
+    {
+      "name": "sack_1",
+      "variant": "side_bulged_unstable",
+      "pos": [
+        0.6618915701278215,
+        -0.0948427360118624,
+        0.11068059949129011
+      ],
+      "euler": [
+        -0.11812674902529854,
+        -0.3165562407020345,
+        0.33001599016872385
+      ],
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack6Apply.obj",
+      "mesh_scale": 0.07126166834967802,
+      "fill_ratio": 0.7350744321966171,
+      "top_collapse": 0.016136589580227883,
+      "side_bulge": 0.04492618296261572,
+      "flattening": 0.9117845627221217,
+      "pile_difficulty": "partially_buried",
+      "uncertainty_tags": [
+        "side_bulged_unstable",
+        "partially_buried",
+        "top_collapse",
+        "side_asymmetry",
+        "cover_contact"
+      ],
+      "benchmark_case_id": "side_bulged_unstable:partially_buried"
+    },
+    {
+      "name": "sack_2",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.514450368897299,
+        -0.05841201485446485,
+        0.11614293156537032
+      ],
+      "euler": [
+        0.011818955937237724,
+        0.04761988184889887,
+        2.7195751248328524
+      ],
+      "exposed_face": "top",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.07171534465771903,
+      "fill_ratio": 0.9442652296031745,
+      "top_collapse": 0.0063795272906273905,
+      "side_bulge": 0.01010850147468502,
+      "flattening": 1.0349373964363322,
+      "pile_difficulty": "top_exposed",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "top_exposed"
+      ],
+      "benchmark_case_id": "regular_well_filled:top_exposed"
+    },
+    {
+      "name": "sack_3",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.6336789151205588,
+        -0.21620165817828244,
+        0.15121703126756003
+      ],
+      "euler": [
+        -0.12463589474512154,
+        -0.04897468389069269,
+        -2.323368299544013
+      ],
+      "exposed_face": "side",
+      "stack_level": 1,
+      "is_target": false,
+      "mesh_file": "sack2.obj",
+      "mesh_scale": 0.07062694827404756,
+      "fill_ratio": 0.4812304511730846,
+      "top_collapse": 0.045382069232440196,
+      "side_bulge": 0.010261481208648863,
+      "flattening": 0.6887362331234441,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "side_exposed",
+        "top_collapse"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:side_exposed"
+    },
+    {
+      "name": "sack_4",
+      "variant": "low_fill_top_collapsed",
+      "pos": [
+        0.4990035558906406,
+        0.07676960098691468,
+        0.11925060438612062
+      ],
+      "euler": [
+        0.05833725253121025,
+        0.054444872854962155,
+        -2.973851745619435
+      ],
+      "exposed_face": "partial",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack10.obj",
+      "mesh_scale": 0.06805369930442154,
+      "fill_ratio": 0.5774310842575542,
+      "top_collapse": 0.04968711447394484,
+      "side_bulge": 0.005392553660547021,
+      "flattening": 0.7550263720228197,
+      "pile_difficulty": "partially_buried",
+      "uncertainty_tags": [
+        "low_fill_top_collapsed",
+        "partially_buried",
+        "top_collapse",
+        "cover_contact"
+      ],
+      "benchmark_case_id": "low_fill_top_collapsed:partially_buried"
+    },
+    {
+      "name": "sack_5",
+      "variant": "regular_well_filled",
+      "pos": [
+        0.7202135089431827,
+        0.09482019449038429,
+        0.10826007741671001
+      ],
+      "euler": [
+        -0.01817550630218312,
+        -0.12479441865270141,
+        -2.689381191500889
+      ],
+      "exposed_face": "side",
+      "stack_level": 0,
+      "is_target": false,
+      "mesh_file": "sack9.obj",
+      "mesh_scale": 0.07331627130310246,
+      "fill_ratio": 0.9808443187720632,
+      "top_collapse": 0.005737049820386094,
+      "side_bulge": 0.008473636919684032,
+      "flattening": 0.9547786675982909,
+      "pile_difficulty": "side_exposed",
+      "uncertainty_tags": [
+        "regular_well_filled",
+        "side_exposed"
+      ],
+      "benchmark_case_id": "regular_well_filled:side_exposed"
+    }
+  ],
+  "metrics": {
+    "support_state_score": 0.405346783818912,
+    "support_success": false,
+    "scoop_insertion_depth": 0.1660763875749897,
+    "micro_lift_stability": 0.17419154702074882,
+    "slip_distance": 0.00144713194144868,
+    "tilt_deg": 27.39995380524403,
+    "dropped": false,
+    "contact_count": 11,
+    "failure_tags": [
+      "unstable_micro_lift",
+      "tilt"
+    ]
+  }
+}

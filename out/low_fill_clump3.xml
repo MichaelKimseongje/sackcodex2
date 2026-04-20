@@ -1,0 +1,51 @@
+<mujoco model="bag_base">
+  <compiler angle="radian" coordinate="local" />
+  <option timestep="0.001" gravity="0 0 -9.81" integrator="implicitfast" solver="Newton" iterations="120" ls_iterations="30" jacobian="sparse" />
+  <size memory="256M" nconmax="4000" />
+  <visual>
+    <global offwidth="1280" offheight="720" />
+  </visual>
+  <worldbody>
+    <light name="key_light" pos="0 0 2.0" dir="0 0 -1" diffuse="0.85 0.85 0.85" />
+    <camera name="overview" pos="1.05 -1.15 0.85" xyaxes="0.72 0.69 0 -0.30 0.31 0.90" />
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.92 0.92 0.92 1" friction="0.9 0.02 0.002" condim="3" />
+    <body name="bag_frame" pos="0 0 0.135">
+      <site name="bag_frame_origin" pos="0 0 0" size="0.005" rgba="0.95 0.15 0.15 1" />
+      <flexcomp name="bag_shell" type="direct" dim="2" mass="0.35" radius="0.0045" rgba="0.77 0.59 0.36 1" point="0.000000 0.000000 0.090000 0.037800 0.000000 0.090000 0.026729 0.022571 0.090000 0.000000 0.031920 0.090000 -0.026729 0.022571 0.090000 -0.037800 0.000000 0.090000 -0.026729 -0.022571 0.090000 -0.000000 -0.031920 0.090000 0.026729 -0.022571 0.090000 0.073600 0.000000 0.000000 0.052043 0.035780 0.000000 0.000000 0.050600 0.000000 -0.052043 0.035780 0.000000 -0.073600 0.000000 0.000000 -0.052043 -0.035780 0.000000 -0.000000 -0.050600 0.000000 0.052043 -0.035780 0.000000 0.052000 0.000000 -0.115000 0.036770 0.028284 -0.115000 0.000000 0.040000 -0.115000 -0.036770 0.028284 -0.115000 -0.052000 0.000000 -0.115000 -0.036770 -0.028284 -0.115000 -0.000000 -0.040000 -0.115000 0.036770 -0.028284 -0.115000 0.000000 0.000000 -0.150000" element="             0 1 2             0 2 3             0 3 4             0 4 5             0 5 6             0 6 7             0 7 8             0 8 1             1 2 10             1 10 9             2 3 11             2 11 10             3 4 12             3 12 11             4 5 13             4 13 12             5 6 14             5 14 13             6 7 15             6 15 14             7 8 16             7 16 15             8 1 9             8 9 16             9 10 18             9 18 17             10 11 19             10 19 18             11 12 20             11 20 19             12 13 21             12 21 20             13 14 22             13 22 21             14 15 23             14 23 22             15 16 24             15 24 23             16 9 17             16 17 24             25 18 17             25 19 18             25 20 19             25 21 20             25 22 21             25 23 22             25 24 23             25 17 24">
+        <contact condim="3" selfcollide="none" internal="false" friction="0.4 0.01 0.001" solref="0.03 1" solimp="0.85 0.95 0.001" />
+        <edge equality="true" damping="20" />
+        <pin id="1" />
+        <pin id="2" />
+        <pin id="3" />
+        <pin id="4" />
+        <pin id="5" />
+        <pin id="6" />
+        <pin id="7" />
+        <pin id="8" />
+      </flexcomp>
+      <body name="low_fill_clump_0" pos="0.000 0.000 -0.092">
+        <joint name="low_fill_clump_0_x" type="slide" axis="1 0 0" limited="true" range="-0.022 0.022" damping="12" />
+        <joint name="low_fill_clump_0_y" type="slide" axis="0 1 0" limited="true" range="-0.024 0.024" damping="12" />
+        <joint name="low_fill_clump_0_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.020" damping="16" />
+        <geom name="low_fill_clump_0_geom" type="ellipsoid" size="0.024 0.020 0.036" mass="0.28" rgba="0.45 0.20 0.16 1" condim="3" friction="0.3 0.01 0.001" />
+      </body>
+      <body name="low_fill_clump_1" pos="-0.018 0.016 -0.078">
+        <joint name="low_fill_clump_1_x" type="slide" axis="1 0 0" limited="true" range="-0.022 0.022" damping="12" />
+        <joint name="low_fill_clump_1_y" type="slide" axis="0 1 0" limited="true" range="-0.024 0.024" damping="12" />
+        <joint name="low_fill_clump_1_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.020" damping="16" />
+        <geom name="low_fill_clump_1_geom" type="ellipsoid" size="0.018 0.014 0.026" mass="0.16" rgba="0.45 0.20 0.16 1" condim="3" friction="0.3 0.01 0.001" />
+      </body>
+      <body name="low_fill_clump_2" pos="0.020 -0.014 -0.076">
+        <joint name="low_fill_clump_2_x" type="slide" axis="1 0 0" limited="true" range="-0.022 0.022" damping="12" />
+        <joint name="low_fill_clump_2_y" type="slide" axis="0 1 0" limited="true" range="-0.024 0.024" damping="12" />
+        <joint name="low_fill_clump_2_z" type="slide" axis="0 0 1" limited="true" range="-0.015 0.020" damping="16" />
+        <geom name="low_fill_clump_2_geom" type="ellipsoid" size="0.018 0.014 0.024" mass="0.14" rgba="0.45 0.20 0.16 1" condim="3" friction="0.3 0.01 0.001" />
+      </body>
+    </body>
+  </worldbody>
+  <contact>
+    <exclude body1="low_fill_clump_0" body2="low_fill_clump_1" />
+    <exclude body1="low_fill_clump_0" body2="low_fill_clump_2" />
+    <exclude body1="low_fill_clump_1" body2="low_fill_clump_2" />
+  </contact>
+</mujoco>

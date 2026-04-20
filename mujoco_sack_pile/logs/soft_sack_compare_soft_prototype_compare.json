@@ -1,0 +1,38 @@
+{
+  "variant": "low_fill_top_collapsed",
+  "mesh_file": "sack.obj",
+  "reports": {
+    "mesh_only": {
+      "mode": "mesh_only",
+      "xml_path": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\soft_sack_compare_mesh_only.xml",
+      "settle_seconds": 5.0,
+      "stable": false,
+      "non_finite": false,
+      "tail_mean_qvel": 20.542070238692627,
+      "tail_max_qvel": 27.19020638533406,
+      "peak_contact_count": 25501,
+      "final_min_geom_height": NaN,
+      "final_z_span": NaN,
+      "failure_tags": [
+        "tail_mean_velocity_high",
+        "tail_peak_velocity_high"
+      ]
+    },
+    "mesh_with_payload": {
+      "mode": "mesh_with_payload",
+      "xml_path": "D:\\Michael\\2025\\01.Research\\01.Parceldetection\\16.Pybullet\\bullet3-master (1)\\bullet3-master\\examples\\pybullet\\examples\\DeformableTest\\Sackcodex2\\mujoco_sack_pile\\generated\\soft_sack_compare_mesh_with_payload.xml",
+      "settle_seconds": 5.0,
+      "stable": false,
+      "non_finite": false,
+      "tail_mean_qvel": 0.7793215317020472,
+      "tail_max_qvel": 0.9542646211176979,
+      "peak_contact_count": 703,
+      "final_min_geom_height": 0.034672790579518074,
+      "final_z_span": 0.0002576201082116203,
+      "failure_tags": [
+        "tail_mean_velocity_high",
+        "collapsed_z_span"
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+<mujoco model="demo_low_fill">
+  <!--timestep=0.001, solver=Newton, cone=elliptic, impratio=10.0, shell_radius=0.0045, shell_thickness=0.003, shell_damping=18.0, self_collision_mode=none, vertcollide=False [MuJoCo 3.1.6 direct flexcomp에서는 thickness/vertcollide가 XML 속성으로 직접 지원되지 않아 문서화 파라미터로 유지하고, 실제 안정성은 radius/contact/edge damping으로 제어한다.]-->
+  <compiler angle="radian" coordinate="local" />
+  <option timestep="0.001" gravity="0 0 -9.81" integrator="implicitfast" solver="Newton" iterations="120" ls_iterations="30" jacobian="sparse" cone="elliptic" impratio="10.0" />
+  <size memory="256M" nconmax="4000" />
+  <visual>
+    <global offwidth="1280" offheight="720" />
+  </visual>
+  <worldbody>
+    <light name="key_light" pos="0.2 -0.4 1.8" dir="-0.1 0.2 -1" diffuse="0.9 0.9 0.9" />
+    <camera name="overview" pos="0.78 -1.24 0.63" xyaxes="0.84 0.54 0 -0.22 0.34 0.91" />
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.92 0.92 0.92 1" friction="0.9 0.02 0.002" condim="3" />
+    <body name="bag_frame" pos="0 0 0.157">
+      <site name="bag_frame_origin" pos="0 0 0" size="0.004" rgba="0.8 0.15 0.15 1" />
+      <flexcomp name="bag_shell" type="direct" dim="2" mass="0.280" radius="0.0045" rgba="0.75 0.60 0.36 1" point="0.000000 0.000000 0.065000 0.032000 0.000000 0.100000 0.022627 0.022627 0.100000 0.000000 0.032000 0.100000 -0.022627 0.022627 0.100000 -0.032000 0.000000 0.100000 -0.022627 -0.022627 0.100000 -0.000000 -0.032000 0.100000 0.022627 -0.022627 0.100000 0.048000 0.000000 -0.015000 0.033941 0.033941 -0.015000 0.000000 0.048000 -0.015000 -0.033941 0.033941 -0.015000 -0.048000 0.000000 -0.015000 -0.033941 -0.033941 -0.015000 -0.000000 -0.048000 -0.015000 0.033941 -0.033941 -0.015000 0.078000 0.000000 -0.120000 0.055154 0.055154 -0.120000 0.000000 0.078000 -0.120000 -0.055154 0.055154 -0.120000 -0.078000 0.000000 -0.120000 -0.055154 -0.055154 -0.120000 -0.000000 -0.078000 -0.120000 0.055154 -0.055154 -0.120000 0.000000 0.000000 -0.152000" element="0 1 2&#10;  0 2 3&#10;  0 3 4&#10;  0 4 5&#10;  0 5 6&#10;  0 6 7&#10;  0 7 8&#10;  0 8 1&#10;  1 2 10&#10;  1 10 9&#10;  2 3 11&#10;  2 11 10&#10;  3 4 12&#10;  3 12 11&#10;  4 5 13&#10;  4 13 12&#10;  5 6 14&#10;  5 14 13&#10;  6 7 15&#10;  6 15 14&#10;  7 8 16&#10;  7 16 15&#10;  8 1 9&#10;  8 9 16&#10;  9 10 18&#10;  9 18 17&#10;  10 11 19&#10;  10 19 18&#10;  11 12 20&#10;  11 20 19&#10;  12 13 21&#10;  12 21 20&#10;  13 14 22&#10;  13 22 21&#10;  14 15 23&#10;  14 23 22&#10;  15 16 24&#10;  15 24 23&#10;  16 9 17&#10;  16 17 24&#10;  25 18 17&#10;  25 19 18&#10;  25 20 19&#10;  25 21 20&#10;  25 22 21&#10;  25 23 22&#10;  25 24 23&#10;  25 17 24">
+        <contact condim="3" selfcollide="none" internal="false" friction="0.4 0.01 0.001" solref="0.03 1" solimp="0.85 0.95 0.001" />
+        <edge equality="true" damping="18.0" />
+      </flexcomp>
+      <body name="bag_ballast" pos="0 0 -0.108">
+        <joint name="bag_ballast_x" type="slide" axis="1 0 0" limited="true" range="-0.020 0.020" damping="10" />
+        <joint name="bag_ballast_y" type="slide" axis="0 1 0" limited="true" range="-0.020 0.020" damping="10" />
+        <joint name="bag_ballast_z" type="slide" axis="0 0 1" limited="true" range="-0.010 0.016" damping="14" />
+        <geom name="bag_ballast_geom" type="ellipsoid" size="0.028 0.022 0.030" mass="0.34" rgba="0.48 0.22 0.15 1" condim="3" friction="0.35 0.01 0.001" />
+      </body>
+      <freejoint name="bag_frame_freejoint" />
+    </body>
+  </worldbody>
+</mujoco>

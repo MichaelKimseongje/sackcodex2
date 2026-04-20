@@ -1,0 +1,5 @@
+﻿<mujoco model="mesh_asset_test">
+  <compiler angle="radian" coordinate="local" meshdir="object"/>
+  <asset><mesh name="sack_mesh" file="sack9.obj" scale="0.07 0.07 0.07"/></asset>
+  <worldbody><geom type="mesh" mesh="sack_mesh"/></worldbody>
+</mujoco>

@@ -1,0 +1,9 @@
+﻿component,before,after,reason
+top_seam_chain,"7 segments, stiffness=2.8, damping=8.0, limit=+-16deg","11 segments, stiffness=0.16, damping=0.75, limit=+-55deg",top contact region의 국소 접힘/눌림을 눈에 보이게 만들기 위해 분절 수를 늘리고 stiffness/damping을 낮춤
+shoulder_panels,"3 panels/side, stiffness=state*1.0, damping=7.0, limit=+-42deg","5 panels/side, stiffness=max(0.035,state*0.10), damping=baseline 2.20 / nominal 0.95 / underfilled 0.42, limit=+-92deg or underfilled +-118deg",underfilled shoulder가 통째로 밀리지 않고 안쪽으로 처지는 local compliance를 만들기 위함
+side_gusset,"2 panels/side, stiffness=1.8, damping=7.0, limit=+-38deg","3 panels/side, stiffness=0.36, damping=1.55, limit=+-75deg",side push/jammed 상황에서 옆면이 rigid wall처럼 보이지 않도록 함
+lower_belly_panels,"4 panels, stiffness=state*1.0, damping=8.5, limit=+-42deg","6 panels, stiffness=max(0.16,state*0.16), damping=1.15, limit=+-88deg",scoop insertion region이 열리거나 들리는 visible local shape change를 만들기 위함
+fold_root,"stiffness=1.8, damping=8.0, limit=-70..35deg","stiffness=0.24, damping=1.55, limit=-115..80deg",fold brushing 후 seam 노출률이 조금 변하는 접힘부 반응을 만들기 위함
+bottom_sling,"single slide, stiffness=1.15, damping=12.0, range=-70..14mm","center slide + left/right hinged panels, stiffness=0.34/0.28, damping=2.8/2.2, range=-120..35mm",post separation sag에서 bottom이 top보다 더 처지는 하부 지지 구조를 만들기 위함
+internal_load_surrogate,payload_main + payload_aux,"payload_main + payload_aux + payload_left + payload_right, limited x/y/z slide",DEM 없이 coarse granular load redistribution을 표현하기 위함
+strap_tendon_coupling,none,"top-seam<->shoulder, shoulder<->belly, fold<->shoulder, belly<->bottom fixed tendons",관절 패치가 따로 노는 느낌을 줄이고 저차 coordinated shape change를 만들기 위함

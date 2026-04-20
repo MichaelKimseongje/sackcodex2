@@ -1,0 +1,4 @@
+<mujoco model="sack_pile_template">
+  <!-- episode별 실제 XML은 scene_generator.py가 generated 폴더에 작성한다. -->
+  <!-- 이 파일은 MJCF 구조를 별도 산출물로 남기기 위한 템플릿이다. -->
+</mujoco>

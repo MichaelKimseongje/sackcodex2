@@ -1,0 +1,12 @@
+# Blender 4.0.2 MTL File: 'sack7.blend'
+# www.blender.org
+
+newmtl 매테리얼
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd D:/Michael/2025/01.Research/01.Parceldetection/16.Pybullet/14.BlenderProc-main/examples/parcels/sack_v1obj/Material_baseColor.png
