@@ -2,7 +2,7 @@
   "panel_count": 8,
   "bag_length": 0.28,
   "panel_width": 0.07,
-  "panel_thickness": 0.001,
+  "panel_thickness": 0.003,
   "panel_mass": 0.045,
   "hinge_axis": "1 0 0",
   "hinge_range_min_deg": -90.0,
@@ -32,8 +32,8 @@
     60.0,
     60.0,
     60.0,
-    0.0,
-    0.0
+    45.0,
+    45.0
   ],
   "backend": "xml_fallback_no_mjspec",
   "backend_message": "현재 mujoco==3.1.6에는 MjSpec이 없어 XML builder fallback을 사용했습니다.",

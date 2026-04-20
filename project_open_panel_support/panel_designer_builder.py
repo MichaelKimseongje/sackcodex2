@@ -35,7 +35,7 @@ class PanelDesignerConfig:
     panel_count: int = 8
     bag_length: float = 0.28
     panel_width: float = 0.070
-    panel_thickness: float = 0.001
+    panel_thickness: float = 0.003
     panel_mass: float = 0.045
     hinge_axis: str = "1 0 0"
     hinge_range_min_deg: float = -90.0
